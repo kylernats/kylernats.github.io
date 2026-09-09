@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Network Analysis — Kyler Nats</title>
-<meta name="description" content="Packet-level forensics with Wireshark and protocol behavior under failure.">
+<meta name="description" content="Packet-level analysis with Wireshark.">
 <link rel="canonical" href="https://kylernats.github.io/work/network-analysis/">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Network Analysis — Kyler Nats">
-<meta property="og:description" content="Packet-level forensics with Wireshark and protocol behavior under failure.">
+<meta property="og:description" content="Packet-level analysis with Wireshark.">
 <meta property="og:url" content="https://kylernats.github.io/work/network-analysis/">
 <meta property="og:image" content="https://kylernats.github.io/assets/img/headshot.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -49,28 +49,35 @@
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/work/">Work</a> <span>/</span> <span>Network Analysis</span></nav>
       <span class="eyebrow" style="display:block;margin-top:16px">Domain</span>
       <h1>Network Analysis</h1>
-      <p class="lede">What the packets show that the logs leave out.</p>
+      <p class="lede">Reading traffic at the packet level.</p>
     </div>
   </section>
 
   <section class="section">
+    <div class="wrap"><div class="prose"><p>Logs show what an application decided to write down. A capture shows what actually crossed the wire. When the two disagree, the capture is right, and being able to read one is what separates explaining an incident from guessing at it.</p></div></div>
+  </section>
+
+  <section class="section">
     <div class="wrap">
-      <div class="prose">
-        <p>Logs tell you what an application decided to record. Packet capture tells you what actually crossed the wire. When those two disagree, the capture is right — and knowing how to read it is the difference between guessing at an incident and explaining it.</p>
-      </div>
+      <div class="callout"><div><strong>Coursework:</strong> graduate Computer Networking at Eller — TCP congestion analysis, an HTTP client built from scratch, BGP, OpenFlow, IPv6 tunneling, TLS and IKE labs, wireless, and data center networking.</div></div>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div>
-          <span class="eyebrow">Grounding</span>
-          <h2 style="margin-top:8px">What this is built on</h2>
-        </div>
+        <div><span class="eyebrow">Published</span><h2 style="margin-top:8px">Work in this area</h2></div>
       </div>
-      <div class="callout">
-        <div><strong>Grounded in coursework and labs:</strong> graduate Computer Networking at Eller — TCP congestion analysis, HTTP client implementation, BGP, OpenFlow/SDN, IPv6 tunneling, TLS and IKE labs, wireless analysis, and data center networking. Existing public work includes a Wireshark TCP analysis.</div>
+      <div class="card-grid">
+        <a class="card" href="https://github.com/kylernats/Wireshark-TCP-Analysis" target="_blank" rel="noopener">
+          <div class="card__title">Wireshark TCP Analysis</div>
+          <p class="card__desc">Reading TCP behavior straight from a capture — the handshake, retransmissions, and how congestion control reacts when things go wrong.</p>
+          <p class="project-card__stack">Wireshark · TCP/IP</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-network)">Network Analysis</span>
+            <span class="badge badge--live">Published</span>
+          </div>
+        </a>
       </div>
     </div>
   </section>
@@ -80,38 +87,22 @@
       <div class="section-head">
         <div>
           <span class="eyebrow">Roadmap</span>
-          <h2 style="margin-top:8px">Planned work</h2>
-          <p>Listed before it exists, so the roadmap is visible rather than implied.</p>
+          <h2 style="margin-top:8px">What's next</h2>
+          <p>Listed before it exists so you can tell the difference.</p>
         </div>
       </div>
       <div class="card-grid">
         <article class="card">
-          <div class="card__title">TCP Behavior Under Stress</div>
-          <p class="card__desc">Congestion control, retransmission, and connection failure analyzed from live captures rather than described from a textbook.</p>
+          <div class="card__title">Packet forensics walkthrough</div>
+          <p class="card__desc">Rebuilding an incident timeline using only a capture file.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-network)">Network Analysis</span>
             <span class="badge badge--planned">Planned</span>
           </div>
         </article>
         <article class="card">
-          <div class="card__title">Packet Forensics Walkthrough</div>
-          <p class="card__desc">Reconstructing an incident timeline purely from a capture file.</p>
-          <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-network)">Network Analysis</span>
-            <span class="badge badge--planned">Planned</span>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card__title">Protocol Security Analysis</div>
-          <p class="card__desc">TLS handshakes, IPsec/IKE negotiation, and what's still exposed in each.</p>
-          <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-network)">Network Analysis</span>
-            <span class="badge badge--planned">Planned</span>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card__title">Routing &amp; Infrastructure</div>
-          <p class="card__desc">BGP behavior, IPv6 tunneling, and the failure modes that take networks down.</p>
+          <div class="card__title">Protocol security analysis</div>
+          <p class="card__desc">What's still visible in a TLS handshake and an IPsec/IKE negotiation.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-network)">Network Analysis</span>
             <span class="badge badge--planned">Planned</span>
@@ -127,7 +118,7 @@
     <div class="site-footer__grid">
       <div>
         <a class="brand" href="/"><span class="brand__mark">KN</span><span>Kyler Nats</span></a>
-        <p class="site-footer__tagline">Cybersecurity analyst. Cloud, detection, and AI — built, broken, documented.</p>
+        <p class="site-footer__tagline">Cybersecurity analyst working in cloud, detection, and AI.</p>
       </div>
       <div>
         <h4>Work</h4>
@@ -151,7 +142,7 @@
         <h4>Elsewhere</h4>
         <ul>
           <li><a href="https://github.com/kylernats" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://www.linkedin.com/in/kylernats" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.linkedin.com/in/kyler-nats/" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a href="mailto:kylernats@gmail.com">Email</a></li>
         </ul>
       </div>

@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Offensive Security — Kyler Nats</title>
-<meta name="description" content="Penetration testing methodology, exploitation labs, and findings that lead to remediation.">
+<meta name="description" content="Penetration testing labs and attack simulation against systems I own.">
 <link rel="canonical" href="https://kylernats.github.io/work/offensive-security/">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Offensive Security — Kyler Nats">
-<meta property="og:description" content="Penetration testing methodology, exploitation labs, and findings that lead to remediation.">
+<meta property="og:description" content="Penetration testing labs and attack simulation against systems I own.">
 <meta property="og:url" content="https://kylernats.github.io/work/offensive-security/">
 <meta property="og:image" content="https://kylernats.github.io/assets/img/headshot.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -49,28 +49,35 @@
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/work/">Work</a> <span>/</span> <span>Offensive Security</span></nav>
       <span class="eyebrow" style="display:block;margin-top:16px">Domain</span>
       <h1>Offensive Security</h1>
-      <p class="lede">Understanding the attack well enough to build the detection — and reporting it so it actually gets fixed.</p>
+      <p class="lede">Attacking systems I own so the detections I write aren't guesswork.</p>
     </div>
   </section>
 
   <section class="section">
+    <div class="wrap"><div class="prose"><p>I'm not trying to become a pentester. I want to know what an attack looks like from the other side, because that's the difference between a detection rule that works and one that sounds right.</p><p>Everything here runs against machines I own or targets built to be broken.</p></div></div>
+  </section>
+
+  <section class="section">
     <div class="wrap">
-      <div class="prose">
-        <p>I don't want to be a penetration tester. I want to be the defender who knows exactly what the attack looks like from the other side, because that's what makes a detection rule good instead of theoretical.</p><p>Everything here runs against infrastructure I own or deliberately vulnerable targets built for the purpose.</p>
-      </div>
+      <div class="callout"><div><strong>Coursework:</strong> graduate Penetration Testing and Ethical Hacking at Eller, including a full penetration test report, plus red team and blue team group engagements.</div></div>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div>
-          <span class="eyebrow">Grounding</span>
-          <h2 style="margin-top:8px">What this is built on</h2>
-        </div>
+        <div><span class="eyebrow">Published</span><h2 style="margin-top:8px">Work in this area</h2></div>
       </div>
-      <div class="callout">
-        <div><strong>Grounded in coursework and practice:</strong> graduate-level Penetration Testing and Ethical Hacking at Eller, including a full penetration test report, plus red team and blue team engagements. All work performed against owned or intentionally vulnerable systems.</div>
+      <div class="card-grid">
+        <a class="card" href="https://kylernats.github.io/personal-blog/projects/offensive-security-lab/" target="_blank" rel="noopener">
+          <div class="card__title">Offensive Security & Pentesting Lab</div>
+          <p class="card__desc">A segregated lab for running an attack end to end against a Linux target. Reverse shell through Metasploit to get around egress filtering, a vsFTPd 2.3.4 backdoor for the foothold, then John the Ripper on the shadow file.</p>
+          <p class="project-card__stack">Kali · Metasploit · Nmap · John the Ripper</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-offensive)">Offensive Security</span>
+            <span class="badge badge--live">Published</span>
+          </div>
+        </a>
       </div>
     </div>
   </section>
@@ -80,38 +87,30 @@
       <div class="section-head">
         <div>
           <span class="eyebrow">Roadmap</span>
-          <h2 style="margin-top:8px">Planned work</h2>
-          <p>Listed before it exists, so the roadmap is visible rather than implied.</p>
+          <h2 style="margin-top:8px">What's next</h2>
+          <p>Listed before it exists so you can tell the difference.</p>
         </div>
       </div>
       <div class="card-grid">
         <article class="card">
-          <div class="card__title">Full Penetration Test Report</div>
-          <p class="card__desc">A complete engagement write-up — scoping, methodology, findings with severity ratings, and remediation guidance.</p>
+          <div class="card__title">Cloud attack paths</div>
+          <p class="card__desc">Privilege escalation and lateral movement against a deliberately misconfigured copy of my own Azure builds.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-offensive)">Offensive Security</span>
             <span class="badge badge--planned">Planned</span>
           </div>
         </article>
         <article class="card">
-          <div class="card__title">Cloud Attack Paths</div>
-          <p class="card__desc">Privilege escalation and lateral movement against a deliberately misconfigured version of my own Azure builds.</p>
+          <div class="card__title">Purple team loop</div>
+          <p class="card__desc">Run the attack, write the detection, tune it, document both halves.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-offensive)">Offensive Security</span>
             <span class="badge badge--planned">Planned</span>
           </div>
         </article>
         <article class="card">
-          <div class="card__title">Exploitation Lab Notes</div>
-          <p class="card__desc">Working through vulnerability classes hands-on, with the defensive control that stops each one.</p>
-          <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-offensive)">Offensive Security</span>
-            <span class="badge badge--planned">Planned</span>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card__title">Purple Team Exercises</div>
-          <p class="card__desc">Attack executed, detection written, detection tuned — documented as a single loop.</p>
+          <div class="card__title">Manual exploitation</div>
+          <p class="card__desc">Replacing Metasploit modules with my own Python and Bash to cut down the forensic artifacts a framework leaves behind.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-offensive)">Offensive Security</span>
             <span class="badge badge--planned">Planned</span>
@@ -127,7 +126,7 @@
     <div class="site-footer__grid">
       <div>
         <a class="brand" href="/"><span class="brand__mark">KN</span><span>Kyler Nats</span></a>
-        <p class="site-footer__tagline">Cybersecurity analyst. Cloud, detection, and AI — built, broken, documented.</p>
+        <p class="site-footer__tagline">Cybersecurity analyst working in cloud, detection, and AI.</p>
       </div>
       <div>
         <h4>Work</h4>
@@ -151,7 +150,7 @@
         <h4>Elsewhere</h4>
         <ul>
           <li><a href="https://github.com/kylernats" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://www.linkedin.com/in/kylernats" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.linkedin.com/in/kyler-nats/" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a href="mailto:kylernats@gmail.com">Email</a></li>
         </ul>
       </div>

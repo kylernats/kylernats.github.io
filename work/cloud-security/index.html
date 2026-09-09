@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cloud Security — Kyler Nats</title>
-<meta name="description" content="Five Azure security builds solving real business problems, deployed with Terraform and documented end to end.">
+<meta name="description" content="AWS and Azure security projects built with Terraform.">
 <link rel="canonical" href="https://kylernats.github.io/work/cloud-security/">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Cloud Security — Kyler Nats">
-<meta property="og:description" content="Five Azure security builds solving real business problems, deployed with Terraform and documented end to end.">
+<meta property="og:description" content="AWS and Azure security projects built with Terraform.">
 <meta property="og:url" content="https://kylernats.github.io/work/cloud-security/">
 <meta property="og:image" content="https://kylernats.github.io/assets/img/headshot.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -47,20 +47,20 @@
   <section class="page-head">
     <div class="wrap">
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/work/">Work</a> <span>/</span> <span>Cloud Security</span></nav>
-      <span class="eyebrow" style="display:block;margin-top:16px">Domain · 5 projects</span>
+      <span class="eyebrow" style="display:block;margin-top:16px">Domain</span>
       <h1>Cloud Security</h1>
-      <p class="lede">Five Azure builds, each starting from a problem a real business actually has — deployed for real, evidenced, then destroyed.</p>
+      <p class="lede">AWS and Azure infrastructure, built with Terraform so I can rebuild it from scratch and destroy it when I'm done.</p>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap">
       <div class="prose">
-        <p>Most cloud portfolio projects are a virtual machine and a screenshot. These aren't that. Each one starts
-        from a business problem someone would pay to solve, gets built as real infrastructure, and gets a security
-        layer that reflects how it would actually need to run.</p>
-        <p>Everything is defined in Terraform, so the whole environment is reproducible from source and destroyed
-        the moment the evidence is captured.</p>
+        <p>The AWS work here came out of studying for my Cloud Practitioner cert and wanting to
+        stop configuring things by hand in the console. The Azure series is newer. It's five builds
+        that each start from a problem a small business actually has, rather than a tutorial.</p>
+        <p>Everything is in Terraform. That matters less for the portfolio than it does for the bill,
+        since I can stand an environment up, take what I need from it, and destroy it the same day.</p>
       </div>
     </div>
   </section>
@@ -70,39 +70,76 @@
       <div class="section-head">
         <div>
           <span class="eyebrow eyebrow--accent">Method</span>
-          <h2 style="margin-top:8px">How each build runs</h2>
-          <p>A two-loop workflow that keeps the cost near zero without giving up a real deployment.</p>
+          <h2 style="margin-top:8px">How I build the Azure series</h2>
         </div>
       </div>
 
       <div class="card-grid">
         <article class="card">
-          <span class="project-card__index">Loop 1</span>
-          <div class="card__title">Local development</div>
-          <p class="card__desc">Azurite for storage, Azure Functions Core Tools for the real Functions runtime,
-          containerized SQL Server, and a local model behind an OpenAI-compatible endpoint. Iterate and break things
-          freely at zero cost.</p>
+          <span class="project-card__index">Step 1</span>
+          <div class="card__title">Build locally</div>
+          <p class="card__desc">Azurite for storage, Azure Functions Core Tools for the real Functions
+          runtime, SQL Server in Docker, and a local model behind an OpenAI-compatible endpoint.
+          Free, so I can break things as often as I need to.</p>
         </article>
         <article class="card">
-          <span class="project-card__index">Loop 2</span>
-          <div class="card__title">Real deployment</div>
-          <p class="card__desc"><code>terraform apply</code> against Azure free tier, exercise the system under
-          realistic conditions, then capture evidence: architecture diagram, screenshots, logs, cost report,
-          and Defender for Cloud findings.</p>
+          <span class="project-card__index">Step 2</span>
+          <div class="card__title">Deploy for real</div>
+          <p class="card__desc"><code>terraform apply</code> against the Azure free tier, then actually
+          use the thing. Screenshots, logs, the cost report, Defender for Cloud findings, and an
+          architecture diagram all come out of this step.</p>
         </article>
         <article class="card">
-          <span class="project-card__index">Loop 3</span>
-          <div class="card__title">Teardown &amp; write-up</div>
-          <p class="card__desc"><code>terraform destroy</code>, confirm nothing is left billing, then write what
-          the build actually taught me — including what failed the first time.</p>
+          <span class="project-card__index">Step 3</span>
+          <div class="card__title">Tear it down and write it up</div>
+          <p class="card__desc"><code>terraform destroy</code>, confirm nothing is still billing, then
+          write what happened. The write-up includes whatever didn't work the first time.</p>
         </article>
       </div>
 
       <div class="callout" style="margin-top:24px">
-        <div><strong>Why local emulation isn't enough on its own.</strong> Azurite doesn't support blob versioning,
-        soft delete, lifecycle policy, or immutability — which is the entire substance of project 02. Cost data,
-        Azure Monitor, managed identity, RBAC, and Defender for Cloud have no emulator at all. The local loop is for
-        iteration speed; the real deploy is what makes the work honest.</div>
+        <div><strong>Why I don't just use the emulator.</strong> Azurite doesn't support blob versioning,
+        soft delete, lifecycle policies, or immutability, and those four things are the entire point of
+        the backup project. There's also no emulator at all for Cost Management, Azure Monitor, managed
+        identity, RBAC, or Defender for Cloud. So local is for speed, and anything involving security or
+        cost has to run in a real subscription.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Published</span><h2 style="margin-top:8px">AWS work</h2></div>
+      </div>
+      <div class="card-grid">
+        <a class="card" href="https://github.com/kylernats/terraform-ec2-instance-" target="_blank" rel="noopener">
+          <div class="card__title">Automated AWS Infrastructure with Terraform</div>
+          <p class="card__desc">Replaced clicking through the AWS console with Terraform. Built a custom VPC, hardened the security groups, and moved state to an S3 backend after I duplicated resources one too many times.</p>
+          <p class="project-card__stack">Terraform · AWS VPC · EC2 · S3 backend</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Cloud Security</span>
+            <span class="badge badge--live">Published</span>
+          </div>
+        </a>
+        <a class="card" href="https://kylernats.github.io/personal-blog/projects/portfolio-infrastructure/" target="_blank" rel="noopener">
+          <div class="card__title">Portfolio Infrastructure</div>
+          <p class="card__desc">The Hugo and Docker setup behind my previous site, including the GitHub Actions pipeline. Documented because the container networking and submodule problems took longer to solve than the site did.</p>
+          <p class="project-card__stack">Docker · Hugo · GitHub Actions</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Cloud Security</span>
+            <span class="badge badge--live">Published</span>
+          </div>
+        </a>
+        <a class="card" href="https://github.com/kylernats/AWS-EC2-LoadBalancing-Project" target="_blank" rel="noopener">
+          <div class="card__title">EC2 Load Balancing</div>
+          <p class="card__desc">Spreading traffic across instances on AWS and watching what happens to live connections when a target drops out of the pool.</p>
+          <p class="project-card__stack">AWS EC2 · Load Balancer</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Cloud Security</span>
+            <span class="badge badge--live">Published</span>
+          </div>
+        </a>
       </div>
     </div>
   </section>
@@ -111,66 +148,56 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <span class="eyebrow">The series</span>
-          <h2 style="margin-top:8px">Five builds</h2>
+          <span class="eyebrow">In progress</span>
+          <h2 style="margin-top:8px">The Azure series</h2>
         </div>
       </div>
       <div class="card-grid">
-        <article class="card">
-          <span class="project-card__index">01</span>
-          <div class="card__title">Cost Visibility Dashboard</div>
-          <p class="card__desc">Owners can't read, predict, or explain their cloud bill. I've watched a $5K estimate turn into $30K. This dashboard reports on the genuine spend generated by the four builds below — real billing data, not a mock feed.</p>
-          <p class="project-card__stack">Cost Management · Budgets · Monitor alerts · Logic Apps · Workbooks</p>
-          <p class="card__desc" style="font-size:.85rem"><strong style="color:var(--text)">Security layer:</strong> Anomaly detection on spend, budget guardrails, and least-privilege access to billing data.</p>
-          <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Azure</span>
-            <span class="badge badge--planned">Queued</span>
-          </div>
-        </article>
-        <article class="card">
-          <span class="project-card__index">02</span>
+        <a class="card" href="/work/cloud-security/">
           <div class="card__title">Automated Backup System</div>
-          <p class="card__desc">A backup that depends on someone remembering is not a backup — it's a hope. Versioning, lifecycle tiering, immutability against ransomware, and a daily confirmation that proves the thing actually ran.</p>
-          <p class="project-card__stack">Blob Storage · Versioning · Lifecycle policy · Immutability · Logic Apps</p>
-          <p class="card__desc" style="font-size:.85rem"><strong style="color:var(--text)">Security layer:</strong> WORM immutability, soft delete, private endpoints, and a restore drill that proves recovery works.</p>
+          <p class="card__desc">Backups that only run when someone remembers eventually stop running. Versioning, lifecycle rules, immutability, and a daily message confirming it actually worked.</p>
+          <p class="project-card__stack">Blob Storage · Versioning · Lifecycle · Logic Apps</p>
           <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Azure</span>
+            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Cloud Security</span>
             <span class="badge badge--building">Building</span>
           </div>
-        </article>
-        <article class="card">
-          <span class="project-card__index">03</span>
+        </a>
+        <a class="card" href="/work/cloud-security/">
+          <div class="card__title">Cost Visibility Dashboard</div>
+          <p class="card__desc">Owners can't tell what their cloud bill will be until it shows up. This one runs on the real spend from the other four Azure builds.</p>
+          <p class="project-card__stack">Cost Management · Monitor · Logic Apps · Workbooks</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Cloud Security</span>
+            <span class="badge badge--planned">Queued</span>
+          </div>
+        </a>
+        <a class="card" href="/work/cloud-security/">
           <div class="card__title">Website Uptime Monitor</div>
-          <p class="card__desc">The site goes down and the owner finds out from a customer complaint. Three independent checks, alerting within seconds, and a dashboard that shows whether reliability is trending the right way.</p>
-          <p class="project-card__stack">Timer-triggered Functions · Email/SMS alerting · Workbooks</p>
-          <p class="card__desc" style="font-size:.85rem"><strong style="color:var(--text)">Security layer:</strong> Managed identity instead of stored secrets, and alert logic that resists false-positive fatigue.</p>
+          <p class="card__desc">The site goes down and the owner hears about it from a customer. Three checks, alerts in seconds, and a dashboard showing the trend.</p>
+          <p class="project-card__stack">Timer Functions · Email/SMS · Workbooks</p>
           <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Azure</span>
+            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Cloud Security</span>
             <span class="badge badge--planned">Queued</span>
           </div>
-        </article>
-        <article class="card">
-          <span class="project-card__index">04</span>
+        </a>
+        <a class="card" href="/work/cloud-security/">
           <div class="card__title">Customer Inquiry Manager</div>
-          <p class="card__desc">As a business grows, leads and urgent requests get buried in the inbox. An LLM categorizes and prioritizes them, then routes automatically — which means untrusted text reaches a model that can take action.</p>
+          <p class="card__desc">Sorting and routing incoming email with a model. That means untrusted text reaching something that can take actions, so it needs real injection defenses.</p>
           <p class="project-card__stack">App Service · Azure OpenAI · SQL · Logic Apps</p>
-          <p class="card__desc" style="font-size:.85rem"><strong style="color:var(--text)">Security layer:</strong> Prompt injection defense, output validation, PII handling, and blast-radius limits on what the model may trigger.</p>
           <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Azure</span>
+            <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
             <span class="badge badge--planned">Queued</span>
           </div>
-        </article>
-        <article class="card">
-          <span class="project-card__index">05</span>
+        </a>
+        <a class="card" href="/work/cloud-security/">
           <div class="card__title">AI Inventory Tracker</div>
-          <p class="card__desc">Businesses run out of hot items or tie up cash in dead stock, making the call on gut instead of data. Real-time stock levels plus predictive restock recommendations.</p>
+          <p class="card__desc">Stock decisions made on gut instead of data. Live stock levels plus restock predictions.</p>
           <p class="project-card__stack">App Service · SQL · Azure OpenAI</p>
-          <p class="card__desc" style="font-size:.85rem"><strong style="color:var(--text)">Security layer:</strong> Data governance on business records, model abuse monitoring, and guarding against poisoned inputs.</p>
           <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-cloud)">Azure</span>
+            <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
             <span class="badge badge--planned">Queued</span>
           </div>
-        </article>
+        </a>
       </div>
     </div>
   </section>
@@ -181,7 +208,7 @@
     <div class="site-footer__grid">
       <div>
         <a class="brand" href="/"><span class="brand__mark">KN</span><span>Kyler Nats</span></a>
-        <p class="site-footer__tagline">Cybersecurity analyst. Cloud, detection, and AI — built, broken, documented.</p>
+        <p class="site-footer__tagline">Cybersecurity analyst working in cloud, detection, and AI.</p>
       </div>
       <div>
         <h4>Work</h4>
@@ -205,7 +232,7 @@
         <h4>Elsewhere</h4>
         <ul>
           <li><a href="https://github.com/kylernats" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://www.linkedin.com/in/kylernats" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.linkedin.com/in/kyler-nats/" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a href="mailto:kylernats@gmail.com">Email</a></li>
         </ul>
       </div>

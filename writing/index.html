@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Writing — Kyler Nats</title>
-<meta name="description" content="Technical write-ups on cloud security, detection engineering, and AI security.">
+<meta name="description" content="Write-ups on AI security, cloud security, and compliance frameworks.">
 <link rel="canonical" href="https://kylernats.github.io/writing/">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Writing — Kyler Nats">
-<meta property="og:description" content="Technical write-ups on cloud security, detection engineering, and AI security.">
+<meta property="og:description" content="Write-ups on AI security, cloud security, and compliance frameworks.">
 <meta property="og:url" content="https://kylernats.github.io/writing/">
 <meta property="og:image" content="https://kylernats.github.io/assets/img/headshot.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -49,22 +49,43 @@
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <span>Writing</span></nav>
       <span class="eyebrow" style="display:block;margin-top:16px">Notes</span>
       <h1>Writing</h1>
-      <p class="lede">What each build actually taught me — including the parts that didn't work the first time.</p>
+      <p class="lede">Framework breakdowns and what I learned building things.</p>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap">
-      <div class="prose" style="margin-bottom:32px">
-        <p>Every project in the portfolio produces a written breakdown: the business problem it solves, the
-        architecture decision and why the alternatives lost, what broke during the build, and what I'd do differently.
-        A project without a write-up is just a screenshot.</p>
+      <div class="card-grid">
+        <a class="card" href="/writing/nist-ai-rmf/">
+          <div class="card__title">Notes on the NIST AI RMF</div>
+          <p class="card__desc">What the framework actually gives you, and where it stops being useful.</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
+            <span class="arrow-link">Read<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </a>
+        <a class="card" href="/writing/prompt-injection-vs-jailbreaking/">
+          <div class="card__title">Prompt Injection vs. Jailbreaking</div>
+          <p class="card__desc">Two AI attacks that get treated as the same thing. The difference decides where the fix goes.</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
+            <span class="arrow-link">Read<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </a>
+        <a class="card" href="/writing/cmmc-2-0/">
+          <div class="card__title">Navigating CMMC 2.0</div>
+          <p class="card__desc">How the DoD verifies its contractors, and the three things that stuck with me.</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-grc)">GRC & Risk</span>
+            <span class="arrow-link">Read<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </a>
       </div>
 
-      <div class="placeholder">
-        <div class="placeholder__title">First post lands with the Automated Backup System</div>
-        <p>Currently building. The write-up covers immutable storage against ransomware, and why Azurite can't
-        emulate the feature the whole project depends on.</p>
+      <div class="callout" style="margin-top:32px">
+        <div>Each project in the <a href="/work/">work section</a> gets a write-up when it's finished.
+        The next one covers immutable storage against ransomware, and why the local Azure emulator
+        can't fake the feature that project depends on.</div>
       </div>
     </div>
   </section>
@@ -75,7 +96,7 @@
     <div class="site-footer__grid">
       <div>
         <a class="brand" href="/"><span class="brand__mark">KN</span><span>Kyler Nats</span></a>
-        <p class="site-footer__tagline">Cybersecurity analyst. Cloud, detection, and AI — built, broken, documented.</p>
+        <p class="site-footer__tagline">Cybersecurity analyst working in cloud, detection, and AI.</p>
       </div>
       <div>
         <h4>Work</h4>
@@ -99,7 +120,7 @@
         <h4>Elsewhere</h4>
         <ul>
           <li><a href="https://github.com/kylernats" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://www.linkedin.com/in/kylernats" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.linkedin.com/in/kyler-nats/" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a href="mailto:kylernats@gmail.com">Email</a></li>
         </ul>
       </div>

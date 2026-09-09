@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Security — Kyler Nats</title>
-<meta name="description" content="Securing LLM systems: data-loss controls, prompt injection defense, and AI governance.">
+<meta name="description" content="Securing systems that put a language model between untrusted input and real actions.">
 <link rel="canonical" href="https://kylernats.github.io/work/ai-security/">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="AI Security — Kyler Nats">
-<meta property="og:description" content="Securing LLM systems: data-loss controls, prompt injection defense, and AI governance.">
+<meta property="og:description" content="Securing systems that put a language model between untrusted input and real actions.">
 <meta property="og:url" content="https://kylernats.github.io/work/ai-security/">
 <meta property="og:image" content="https://kylernats.github.io/assets/img/headshot.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -49,28 +49,35 @@
       <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/work/">Work</a> <span>/</span> <span>AI Security</span></nav>
       <span class="eyebrow" style="display:block;margin-top:16px">Domain</span>
       <h1>AI Security</h1>
-      <p class="lede">Securing systems that put a language model between untrusted input and real business actions.</p>
+      <p class="lede">Securing systems that put a model between untrusted input and something that can take action.</p>
     </div>
   </section>
 
   <section class="section">
+    <div class="wrap"><div class="prose"><p>I lead AI security for about 1,500 users at work. The question that takes up most of my time is what happens when a model with access to sensitive data reads input from someone trying to make it misbehave.</p><p>Two of the Azure builds are where I test that on my own. Both put a model in front of untrusted text, so both need real defenses rather than a note saying I thought about it.</p></div></div>
+  </section>
+
+  <section class="section">
     <div class="wrap">
-      <div class="prose">
-        <p>I lead secure AI enablement for 1,500+ users in a regulated banking environment, which mostly means answering an uncomfortable question: what happens when a model with access to sensitive data is handed input from someone who wants it to misbehave?</p><p>Projects 04 and 05 in the cloud series are the live testbed — both put an LLM in the path of untrusted text, so both get a genuine adversarial security layer rather than a disclaimer.</p>
-      </div>
+      <div class="callout"><div><strong>At work:</strong> DLP controls and data-loss policies for Microsoft Copilot across 1,500+ users under GLBA, plus AI-driven phishing detection tuning in Proofpoint at FirstBank that cut manual investigation by 30%.</div></div>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div>
-          <span class="eyebrow">Grounding</span>
-          <h2 style="margin-top:8px">What this is built on</h2>
-        </div>
+        <div><span class="eyebrow">Published</span><h2 style="margin-top:8px">Work in this area</h2></div>
       </div>
-      <div class="callout">
-        <div><strong>Grounded in production experience:</strong> leading secure AI enablement across 1,500+ enterprise users at Sunflower Bank — engineering DLP controls and data-loss policies for Microsoft Copilot to prevent NPI leakage under GLBA — plus AI-driven phishing detection tuning in Proofpoint at FirstBank that cut manual investigation 30%. Framework familiarity: NIST AI RMF.</div>
+      <div class="card-grid">
+        <a class="card" href="https://kylernats.github.io/personal-blog/projects/rag-chatbot-architecture/" target="_blank" rel="noopener">
+          <div class="card__title">Scalable RAG Chatbot Architecture</div>
+          <p class="card__desc">A retrieval pipeline over a large Amazon product dataset. Loading the whole file crashed the server, so I moved to DuckDB streaming and cut the memory footprint. Database sits in a private subnet.</p>
+          <p class="project-card__stack">DuckDB · Vector DB · AWS VPC · Embeddings</p>
+          <div class="card__foot">
+            <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
+            <span class="badge badge--live">Published</span>
+          </div>
+        </a>
       </div>
     </div>
   </section>
@@ -80,38 +87,30 @@
       <div class="section-head">
         <div>
           <span class="eyebrow">Roadmap</span>
-          <h2 style="margin-top:8px">Planned work</h2>
-          <p>Listed before it exists, so the roadmap is visible rather than implied.</p>
+          <h2 style="margin-top:8px">What's next</h2>
+          <p>Listed before it exists so you can tell the difference.</p>
         </div>
       </div>
       <div class="card-grid">
         <article class="card">
-          <div class="card__title">Prompt Injection Lab</div>
-          <p class="card__desc">A working attack suite against my own inquiry-manager build — direct injection, indirect via stored content, and exfiltration attempts — with the defenses that hold.</p>
+          <div class="card__title">Prompt injection lab</div>
+          <p class="card__desc">An attack suite against my own inquiry manager build. Direct injection, injection through stored content, and exfiltration attempts, plus whatever holds up against them.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
             <span class="badge badge--planned">Planned</span>
           </div>
         </article>
         <article class="card">
-          <div class="card__title">LLM Data Loss Prevention</div>
-          <p class="card__desc">Controls that stop sensitive data reaching a model or leaving in a response, generalized from Microsoft Copilot DLP work.</p>
+          <div class="card__title">LLM data loss prevention</div>
+          <p class="card__desc">Controls that stop sensitive data reaching a model or leaving in a response.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
             <span class="badge badge--planned">Planned</span>
           </div>
         </article>
         <article class="card">
-          <div class="card__title">NIST AI RMF Mapping</div>
-          <p class="card__desc">A real system mapped control-by-control to the AI Risk Management Framework, showing what each control actually costs to implement.</p>
-          <div class="card__foot">
-            <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
-            <span class="badge badge--planned">Planned</span>
-          </div>
-        </article>
-        <article class="card">
-          <div class="card__title">Model Abuse Monitoring</div>
-          <p class="card__desc">Detection for jailbreak attempts, anomalous usage patterns, and cost-based abuse of an AI endpoint.</p>
+          <div class="card__title">Model abuse monitoring</div>
+          <p class="card__desc">Detection for jailbreak attempts and unusual usage against an AI endpoint.</p>
           <div class="card__foot">
             <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
             <span class="badge badge--planned">Planned</span>
@@ -127,7 +126,7 @@
     <div class="site-footer__grid">
       <div>
         <a class="brand" href="/"><span class="brand__mark">KN</span><span>Kyler Nats</span></a>
-        <p class="site-footer__tagline">Cybersecurity analyst. Cloud, detection, and AI — built, broken, documented.</p>
+        <p class="site-footer__tagline">Cybersecurity analyst working in cloud, detection, and AI.</p>
       </div>
       <div>
         <h4>Work</h4>
@@ -151,7 +150,7 @@
         <h4>Elsewhere</h4>
         <ul>
           <li><a href="https://github.com/kylernats" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://www.linkedin.com/in/kylernats" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://www.linkedin.com/in/kyler-nats/" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a href="mailto:kylernats@gmail.com">Email</a></li>
         </ul>
       </div>

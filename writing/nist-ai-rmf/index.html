@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes on the NIST AI RMF — Kyler Nats</title>
+<meta name="description" content="What the framework actually gives you, and where it stops being useful.">
+<link rel="canonical" href="https://kylernats.github.io/writing/nist-ai-rmf/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Notes on the NIST AI RMF — Kyler Nats">
+<meta property="og:description" content="What the framework actually gives you, and where it stops being useful.">
+<meta property="og:url" content="https://kylernats.github.io/writing/nist-ai-rmf/">
+<meta property="og:image" content="https://kylernats.github.io/assets/img/headshot.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B0D10'/><text y='68' x='50' text-anchor='middle' font-size='52' font-family='monospace' font-weight='bold' fill='%232DD4BF'>KN</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="/">
+      <span class="brand__mark">KN</span>
+      <span>Kyler Nats</span>
+    </a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Toggle navigation">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" data-open="false">
+      <a href="/work/" data-section="work">Work</a>
+      <a href="/writing/" data-section="writing">Writing</a>
+      <a href="/about/" data-section="about">About</a>
+      <a href="/resume/" data-section="resume">Resume</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/writing/">Writing</a> <span>/</span> <span>Notes on the NIST AI RMF</span></nav>
+      <span class="eyebrow" style="display:block;margin-top:16px">AI governance</span>
+      <h1>Notes on the NIST AI RMF</h1>
+      <p class="lede">What the framework actually gives you, and where it stops being useful.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="tag-row" style="margin-bottom:32px">
+        <span class="tag tag--dot" style="--dot:var(--d-ai)">AI Security</span>
+      </div>
+      <div class="prose">
+
+        <p>I use the NIST AI Risk Management Framework at work, so I wanted to write down what it
+        actually is and where it runs out of road.</p>
+
+        <h2>The basics</h2>
+        <p>NIST published AI RMF 1.0 in January 2023 as NIST AI 100-1. It's voluntary. Nobody is going
+        to fine you for ignoring it. It exists because AI systems fail in ways normal software doesn't,
+        and most risk programs had nothing written down for that.</p>
+
+        <h2>The four functions</h2>
+        <p><strong>GOVERN</strong> is the policy and culture layer. Who is accountable, what the process
+        is, how third-party AI gets handled. It's the only one that runs across the other three rather
+        than in sequence with them.</p>
+        <p><strong>MAP</strong> establishes context. What is this system for, who does it affect, what
+        could go wrong. NIST's point here is that whoever builds one piece of an AI system usually can't
+        see the rest, so impacts are hard to anticipate unless someone deliberately writes the context down.</p>
+        <p><strong>MEASURE</strong> analyzes, benchmarks, and monitors the risks you mapped, using
+        quantitative or qualitative methods. Test before deployment and keep testing while it runs.</p>
+        <p><strong>MANAGE</strong> is acting on what you measured. Allocate resources to the risks that
+        matter, respond, recover, communicate.</p>
+        <p>Govern is the one people skip and the one that makes the other three repeatable.</p>
+
+        <h2>The seven characteristics</h2>
+        <p>The framework defines trustworthy AI as valid and reliable, safe, secure and resilient,
+        accountable and transparent, explainable and interpretable, privacy-enhanced, and fair with
+        harmful bias managed.</p>
+        <p>Valid and reliable is the base. NIST is explicit that the rest don't count for much if the
+        system doesn't work in the first place, which is worth remembering when a vendor leads with
+        fairness metrics for a model that's wrong a third of the time.</p>
+
+        <h2>What I actually use it for</h2>
+        <p>Most of my AI work is data loss prevention around Microsoft Copilot in a bank. The framework
+        does not tell you how to configure a DLP policy, and it isn't trying to.</p>
+        <p>What it gives you is a structure for the conversation that happens before the configuration.
+        Who owns this risk. What data can the tool reach. What happens when it surfaces something it
+        shouldn't. How would we find out. Those questions are the difference between deploying an AI
+        tool and being able to explain the deployment to an examiner.</p>
+        <p>In practice I spend most of my time in GOVERN and MAP. MEASURE is the hard one. Working out
+        whether an AI control is doing its job is a lot harder than checking whether a firewall rule is.</p>
+
+        <h2>Where it's thin</h2>
+        <p>It's deliberately general, which is the tradeoff for covering every kind of AI system. If you
+        want to know what to configure on Monday morning, this document won't tell you.</p>
+        <p>Two things fill that gap. The AI RMF Playbook has suggested actions for each subcategory. And
+        the Generative AI Profile, published July 2024 as NIST AI 600-1, is the more useful document if
+        you're working with LLMs specifically, because it names concrete generative AI risks instead of
+        abstract ones.</p>
+
+        <h2>Takeaway</h2>
+        <p>It's a vocabulary and a structure, not a checklist. If you need to show that your organization
+        takes AI risk seriously, it gives you something real to point at. If you're trying to secure an
+        actual LLM deployment, start with the Generative AI Profile and use the RMF to organize what you
+        find.</p>
+
+      </div>
+      <div style="margin-top:48px;padding-top:24px;border-top:1px solid var(--border)">
+        <a class="arrow-link" href="/writing/">All posts<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="site-footer__grid">
+      <div>
+        <a class="brand" href="/"><span class="brand__mark">KN</span><span>Kyler Nats</span></a>
+        <p class="site-footer__tagline">Cybersecurity analyst working in cloud, detection, and AI.</p>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="/work/cloud-security/">Cloud Security</a></li>
+          <li><a href="/work/detection-response/">Detection &amp; Response</a></li>
+          <li><a href="/work/ai-security/">AI Security</a></li>
+          <li><a href="/work/grc-risk/">GRC &amp; Risk</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Site</h4>
+        <ul>
+          <li><a href="/work/">All work</a></li>
+          <li><a href="/writing/">Writing</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="/resume/">Resume</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Elsewhere</h4>
+        <ul>
+          <li><a href="https://github.com/kylernats" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/kyler-nats/" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="mailto:kylernats@gmail.com">Email</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="site-footer__bottom">
+      <span>© <span data-year>2026</span> Kyler Nats</span>
+      <span class="mono">Built by hand · No framework · Hosted on GitHub Pages</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/main.js"></script>
+</body>
+</html>
