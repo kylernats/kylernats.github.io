@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+
+subscription_id = "00000000-0000-0000-0000-000000000000"
+alert_emails    = ["kylernats@gmail.com"]
+
+# Alerts fire at 50%, 80%, and 100% of this, plus a forecast warning.
+# Set it low. The point is to be told early, not to authorize spending.
+monthly_budget = 25
+
+location    = "eastus2"
+name_prefix = "costvis"
