@@ -1,62 +1,37 @@
-# ---------------------------------------------------------------------------
-# Budget
+# =============================================================================
+# TASK 3 — The budget
 #
-# Four notifications, and the split between Actual and Forecasted is the
-# whole point. Actual tells you what already happened. Forecasted tells you
-# where the month is heading, which is the only one that arrives early enough
-# to do anything about.
-# ---------------------------------------------------------------------------
-resource "azurerm_consumption_budget_subscription" "main" {
-  name            = "budget-${var.name_prefix}"
-  subscription_id = data.azurerm_subscription.current.id
+# This is the centrepiece of the project. Get the threshold design right and
+# the rest of the lab is plumbing.
+# =============================================================================
 
-  amount     = var.monthly_budget
-  time_grain = "Monthly"
+# --- 3.1 Subscription budget -------------------------------------------------
+# Requirements:
+#   - Name: "budget-" plus var.name_prefix
+#   - Scoped to the current subscription
+#   - Amount: var.monthly_budget, resetting Monthly
+#   - Time period: var.budget_start_date to var.budget_end_date
+#
+#   - FOUR notification blocks:
+#       50%   of actual spend
+#       80%   of actual spend
+#       100%  of actual spend
+#       100%  of FORECASTED spend
+#
+#     Each one: enabled, operator GreaterThanOrEqualTo, sending to both
+#     var.alert_emails and the action group from 2.1.
+#
+# The actual/forecasted split is the entire idea. Actual thresholds are
+# backward-looking — they tell you money is already gone. The forecast alert
+# fires when the month is PROJECTED to exceed budget, which is the only one
+# that arrives while there is still time to act. That is the alert that would
+# have caught a $5K estimate turning into $30K.
+#
+# Two gotchas:
+#   - the subscription argument wants the full resource ID, not a bare GUID
+#   - thresholds are numbers, and the attribute controlling actual vs
+#     forecasted is a separate argument from the threshold itself
+#
+# resource "azurerm_consumption_budget_subscription" "main" { ... }
 
-  time_period {
-    start_date = var.budget_start_date
-    end_date   = var.budget_end_date
-  }
-
-  # Half the budget spent. Informational.
-  notification {
-    enabled        = true
-    threshold      = 50.0
-    operator       = "GreaterThanOrEqualTo"
-    threshold_type = "Actual"
-    contact_emails = var.alert_emails
-    contact_groups = [azurerm_monitor_action_group.cost.id]
-  }
-
-  # Getting close. Time to look at what is running.
-  notification {
-    enabled        = true
-    threshold      = 80.0
-    operator       = "GreaterThanOrEqualTo"
-    threshold_type = "Actual"
-    contact_emails = var.alert_emails
-    contact_groups = [azurerm_monitor_action_group.cost.id]
-  }
-
-  # Budget is gone.
-  notification {
-    enabled        = true
-    threshold      = 100.0
-    operator       = "GreaterThanOrEqualTo"
-    threshold_type = "Actual"
-    contact_emails = var.alert_emails
-    contact_groups = [azurerm_monitor_action_group.cost.id]
-  }
-
-  # Projected to blow the budget before month end. This is the early warning,
-  # and it is the one that would have caught the $5K estimate turning into
-  # $30K while there was still time to stop it.
-  notification {
-    enabled        = true
-    threshold      = 100.0
-    operator       = "GreaterThanOrEqualTo"
-    threshold_type = "Forecasted"
-    contact_emails = var.alert_emails
-    contact_groups = [azurerm_monitor_action_group.cost.id]
-  }
-}
+# TODO 3.1

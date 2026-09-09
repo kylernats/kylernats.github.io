@@ -1,6 +1,22 @@
-# Storage account names are globally unique and allow no punctuation, so a
-# short random suffix keeps `terraform apply` from colliding with someone
-# else's account name.
+# =============================================================================
+# TASK 1 — Foundation, identity, and storage
+#
+# Docs: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs
+# Search the resource name in that registry. Reading provider docs is the
+# actual skill here, so the arguments are deliberately not listed for you.
+#
+# Available to you already (see providers.tf):
+#   data.azurerm_subscription.current.id           full subscription resource ID
+#   data.azurerm_subscription.current.display_name
+#   var.name_prefix, var.location, var.tags, var.log_retention_days
+# =============================================================================
+
+
+# --- WORKED EXAMPLE ----------------------------------------------------------
+# This one is done, as a pattern to follow. Storage account names are globally
+# unique, lowercase alphanumeric, max 24 characters — so a random suffix stops
+# `apply` colliding with an account someone else already made.
+
 resource "random_string" "suffix" {
   length  = 6
   lower   = true
@@ -9,106 +25,117 @@ resource "random_string" "suffix" {
   special = false
 }
 
-resource "azurerm_resource_group" "main" {
-  name     = "rg-${var.name_prefix}"
-  location = var.location
-  tags     = var.tags
-}
 
-resource "azurerm_log_analytics_workspace" "main" {
-  name                = "law-${var.name_prefix}"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-
-  # PerGB2018 is the pay-as-you-go SKU. The first 5 GB ingested per month is
-  # free, and this workspace will take in a tiny fraction of that.
-  sku               = "PerGB2018"
-  retention_in_days = var.log_retention_days
-
-  tags = var.tags
-}
-
-# ---------------------------------------------------------------------------
-# Identity
+# --- 1.1 Resource group ------------------------------------------------------
+# Requirements:
+#   - Name: "rg-" plus var.name_prefix
+#   - Region: var.location
+#   - Tagged with var.tags   (every resource in this project gets these tags —
+#     that is what makes per-project cost attribution possible later)
 #
-# The identity that reads cost data is separate from my user account and holds
-# exactly one role. If it leaked, the worst an attacker gets is the ability to
-# read a bill. It cannot create, modify, or delete anything.
-# ---------------------------------------------------------------------------
-resource "azurerm_user_assigned_identity" "cost_reader" {
-  name                = "id-${var.name_prefix}-reader"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-  tags                = var.tags
-}
+# resource "azurerm_resource_group" "main" { ... }
 
-resource "azurerm_role_assignment" "cost_reader" {
-  scope                = data.azurerm_subscription.current.id
-  role_definition_name = "Cost Management Reader"
-  principal_id         = azurerm_user_assigned_identity.cost_reader.principal_id
-}
+# TODO 1.1
 
-# ---------------------------------------------------------------------------
-# Storage for the daily cost export
-# ---------------------------------------------------------------------------
-resource "azurerm_storage_account" "exports" {
-  name                = "st${var.name_prefix}${random_string.suffix.result}"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
 
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  account_kind             = "StorageV2"
+# --- 1.2 Log Analytics workspace ---------------------------------------------
+# Requirements:
+#   - Name: "law-" plus var.name_prefix
+#   - Placed in the resource group from 1.1
+#   - SKU: PerGB2018  (pay-as-you-go; first 5 GB/month ingested is free)
+#   - Retention: var.log_retention_days
+#   - Tagged
+#
+# Think about: why does retention default to 30 days in variables.tf rather
+# than the maximum? Answer goes in DECISIONS.md.
+#
+# resource "azurerm_log_analytics_workspace" "main" { ... }
 
-  # --- Security baseline -------------------------------------------------
-  https_traffic_only_enabled      = true
-  min_tls_version                 = "TLS1_2"
-  allow_nested_items_to_be_public = false
+# TODO 1.2
 
-  blob_properties {
-    # Versioning plus soft delete means a bad overwrite or an accidental
-    # delete is recoverable. This is the same control that project 02 is
-    # built around, applied here on a smaller scale.
-    versioning_enabled = true
 
-    delete_retention_policy {
-      days = 7
-    }
+# --- 1.3 User-assigned managed identity --------------------------------------
+# Requirements:
+#   - Name: "id-" plus var.name_prefix plus "-reader"
+#   - Same resource group and region
+#   - Tagged
+#
+# Why a separate identity at all, rather than using your own account? Because
+# the thing that reads cost data should not be the thing that can also delete
+# resources. Write that reasoning down.
+#
+# resource "azurerm_user_assigned_identity" "cost_reader" { ... }
 
-    container_delete_retention_policy {
-      days = 7
-    }
-  }
+# TODO 1.3
 
-  tags = var.tags
-}
 
-resource "azurerm_storage_container" "exports" {
-  name                  = "cost-exports"
-  storage_account_id    = azurerm_storage_account.exports.id
-  container_access_type = "private"
-}
+# --- 1.4 Role assignment -----------------------------------------------------
+# Requirements:
+#   - Scope: the whole subscription (cost data lives at subscription scope,
+#     not resource group scope — a resource-group-scoped role cannot read a bill)
+#   - Role: "Cost Management Reader"
+#   - Principal: the principal_id of the identity from 1.3
+#
+# Trap: a user-assigned identity exposes BOTH `principal_id` and `client_id`.
+# Only one of them is correct here. Picking the wrong one produces an apply
+# error that looks nothing like the real cause — worth knowing which and why.
+#
+# resource "azurerm_role_assignment" "cost_reader" { ... }
 
-# Send storage access logs to Log Analytics so there is a record of who read
-# the cost data, not just what it said.
-resource "azurerm_monitor_diagnostic_setting" "storage_blob" {
-  name                       = "diag-blob"
-  target_resource_id         = "${azurerm_storage_account.exports.id}/blobServices/default"
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+# TODO 1.4
 
-  enabled_log {
-    category = "StorageRead"
-  }
 
-  enabled_log {
-    category = "StorageWrite"
-  }
+# --- 1.5 Storage account -----------------------------------------------------
+# This holds exported billing data, so the security baseline is the point of
+# the resource, not decoration.
+#
+# Requirements:
+#   - Name: "st" + var.name_prefix + random_string.suffix.result
+#     (no hyphens allowed in storage account names)
+#   - Standard tier, LRS replication, StorageV2
+#   - Security baseline, all of which you must set explicitly:
+#       * HTTPS-only traffic
+#       * minimum TLS 1.2
+#       * blob containers and blobs may NOT be publicly accessible
+#   - Data protection, inside a blob_properties block:
+#       * blob versioning enabled
+#       * soft delete for blobs, 7 days
+#       * soft delete for containers, 7 days
+#   - Tagged
+#
+# Note: the HTTPS argument was renamed in azurerm v4. If you write the v3 name
+# you will get a clear error — read it rather than guessing.
+#
+# resource "azurerm_storage_account" "exports" { ... }
 
-  enabled_log {
-    category = "StorageDelete"
-  }
+# TODO 1.5
 
-  enabled_metric {
-    category = "Transaction"
-  }
-}
+
+# --- 1.6 Storage container ---------------------------------------------------
+# Requirements:
+#   - Name: "cost-exports"
+#   - Belongs to the storage account from 1.5
+#   - Access type: private
+#
+# In azurerm v4 this resource takes the storage account by ID, not by name.
+#
+# resource "azurerm_storage_container" "exports" { ... }
+
+# TODO 1.6
+
+
+# --- 1.7 Diagnostic settings -------------------------------------------------
+# Requirements:
+#   - Target: the BLOB SERVICE of the storage account, not the account itself.
+#     The ID is the account ID with "/blobServices/default" appended.
+#   - Send to the Log Analytics workspace from 1.2
+#   - Capture these log categories: StorageRead, StorageWrite, StorageDelete
+#   - Capture the Transaction metric category
+#
+# Why: cost figures are sensitive. This records WHO READ the data, not just
+# what it said. Use `enabled_metric`, not `metric` — the latter is deprecated
+# and disappears in provider v5.
+#
+# resource "azurerm_monitor_diagnostic_setting" "storage_blob" { ... }
+
+# TODO 1.7

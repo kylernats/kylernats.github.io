@@ -1,33 +1,30 @@
-# ---------------------------------------------------------------------------
-# Daily cost export
+# =============================================================================
+# TASK 4 — Daily cost export
+# =============================================================================
+
+# --- 4.1 Cost management export ----------------------------------------------
+# Cost Analysis in the portal is fine for reading a number today. It is useless
+# for "what did this look like six months ago" once retention rolls over. The
+# export writes a CSV of real usage into blob storage every day, which becomes
+# the raw history everything else can be rebuilt from.
 #
-# Cost Analysis in the portal is fine for looking at a number. It is useless
-# for answering "what did this look like six months ago" once the retention
-# window rolls over. The export drops a CSV of actual usage into blob storage
-# every day, which is the raw history everything else can be rebuilt from.
-# ---------------------------------------------------------------------------
-resource "azurerm_subscription_cost_management_export" "daily" {
-  name                         = "export-${var.name_prefix}-daily"
-  subscription_id              = data.azurerm_subscription.current.id
-  recurrence_type              = "Daily"
-  recurrence_period_start_date = var.budget_start_date
-  recurrence_period_end_date   = var.budget_end_date
+# Requirements:
+#   - Name: "export-" plus var.name_prefix plus "-daily"
+#   - Scoped to the current subscription
+#   - Runs Daily, between var.budget_start_date and var.budget_end_date
+#   - Writes into the container from 1.6, under a root folder path "daily"
+#   - Export data options:
+#       type       = ActualCost      (what was billed; the alternative,
+#                                     AmortizedCost, spreads reservation
+#                                     purchases across the period they cover)
+#       time_frame = MonthToDate     (each run rewrites the month so far, so
+#                                     the newest file is always complete)
+#
+#   - depends_on the role assignment from 1.4. Without it Terraform may create
+#     the export before permissions exist and the first run fails silently.
+#     Think about why an explicit depends_on is needed when Terraform normally
+#     works dependencies out on its own.
+#
+# resource "azurerm_subscription_cost_management_export" "daily" { ... }
 
-  export_data_storage_location {
-    container_id     = azurerm_storage_container.exports.id
-    root_folder_path = "daily"
-  }
-
-  export_data_options {
-    # ActualCost is what was billed. The alternative, AmortizedCost, spreads
-    # reservation purchases across the period they cover. With no reservations
-    # in play the two are identical, but ActualCost is what the invoice says.
-    type = "ActualCost"
-
-    # Each daily run rewrites the month so far, so the newest file is always
-    # the complete picture of the current month.
-    time_frame = "MonthToDate"
-  }
-
-  depends_on = [azurerm_role_assignment.cost_reader]
-}
+# TODO 4.1
