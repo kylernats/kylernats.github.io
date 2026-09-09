@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+*.log
+.venv/
+venv/
+node_modules/
+
+# Terraform — project infrastructure lives in this repo, state does not
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+.terraform.lock.hcl
