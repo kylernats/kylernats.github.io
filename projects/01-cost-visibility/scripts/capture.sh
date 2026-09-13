@@ -18,8 +18,17 @@ INDEX="$PROJECT_DIR/docs/evidence/screenshots/INDEX.md"
 mkdir -p "$DEST"
 
 # macOS names these "Screenshot 2026-09-09 at 4.03.12 PM.png" (or "Screen Shot"
-# on older releases). Take whichever is newest.
-latest=$(ls -t "$HOME/Desktop/"Screen*.png 2>/dev/null | head -1 || true)
+# on older releases). Note the character before "PM" is U+202F, a narrow
+# no-break space, NOT a regular space -- so always glob, never type the name.
+#
+# Takes the OLDEST pending shot, so taking several and then filing them one by
+# one keeps them in the order they were captured.
+pending=$(ls -1 "$HOME/Desktop/"Screen*.png 2>/dev/null | wc -l | tr -d ' ')
+latest=$(ls -tr "$HOME/Desktop/"Screen*.png 2>/dev/null | head -1 || true)
+
+if [[ "$pending" -gt 1 ]]; then
+  echo "Note: $pending screenshots pending. Filing the oldest."
+fi
 
 if [[ -z "$latest" ]]; then
   echo "No screenshot found on the Desktop."
