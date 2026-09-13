@@ -72,3 +72,26 @@ holds. Losing a region's copy means re-running an export, not losing anything
 irreplaceable. Paying for geo-redundancy here would be spending money to
 protect against a scenario with no real consequence — which is itself the kind
 of decision this project is about.
+
+---
+
+### Redacting identifiers from published evidence
+
+**Alternatives:** publish screenshots as taken. Microsoft's own documentation
+shows subscription IDs freely, and a subscription ID is an identifier rather
+than a credential — it grants nothing on its own.
+
+**Chose:** blur the subscription ID, account email, and tenant domain
+(`*.onmicrosoft.com`) in every published screenshot, and scrub the ID from
+captured API output. `snapshot.sh` now does the scrub automatically so it
+cannot be forgotten later.
+
+**Why:** there is no upside to publishing them. A subscription ID plus a tenant
+domain plus a known account email is useful for targeted phishing and for
+consent-grant attacks against a tenant, even though none of the three is secret.
+The evidence the screenshots exist to prove — Owner role, $0.00 current cost,
+$200 credit, `BUDGET: NONE` — survives redaction completely.
+
+**Method:** pixelate then Gaussian blur, rather than a light blur. A lightly
+blurred fixed-width font can often be recovered; a downsample to a few pixels
+destroys the information rather than obscuring it.

@@ -40,7 +40,7 @@ az consumption usage list --top 50 \
   echo "# Snapshot: $LABEL"
   echo
   echo "Captured $(date '+%Y-%m-%d %H:%M:%S %Z')"
-  echo "Subscription: $SUB"
+  echo "Subscription: <redacted>"   # never publish the real ID
   echo
   echo "| File | Records |"
   echo "|---|---|"
@@ -49,5 +49,9 @@ az consumption usage list --top 50 \
     echo "| \`$(basename "$f")\` | $n |"
   done
 } > "$OUT/README.md"
+
+# Scrub the subscription ID from every captured file before it is committed.
+find "$OUT" -type f \( -name '*.json' -o -name '*.md' \) \
+  -exec sed -i '' "s/$SUB/<subscription-id-redacted>/g" {} +
 
 cat "$OUT/README.md"
