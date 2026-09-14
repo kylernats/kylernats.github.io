@@ -15,6 +15,7 @@ import re
 import subprocess
 import threading
 import time
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -26,7 +27,37 @@ WEB = ROOT / "web"
 LABS = ROOT / "labs"
 
 # az and terraform live in Homebrew's prefix, which a bare server process misses.
-ENV = {**os.environ, "PATH": f"/opt/homebrew/bin:/usr/local/bin:{os.environ.get('PATH','')}"}
+ENV = {**os.environ,
+       "PATH": f"{Path.home()}/.local/bin:/opt/homebrew/bin:/usr/local/bin:{os.environ.get('PATH','')}"}
+
+# The tutor runs through the local `claude` CLI, so it uses the existing Claude
+# Code plan rather than a separate API key. Read-only tools only: it can look at
+# the learner's actual Terraform, but cannot change anything.
+CHAT_MODEL = "claude-sonnet-5"
+CHAT_TOOLS = ["Read", "Grep", "Glob"]
+
+TUTOR_PROMPT = """You are the tutor for a hands-on Azure security lab.
+
+The learner is Kyler Nats, a cybersecurity analyst at a bank. He knows security
+well (SOC, detection, GRC, AI security) and has used Terraform on AWS, but Azure
+resource specifics are new to him.
+
+He DELIBERATELY chose to write all the Terraform himself rather than be handed
+working code, because he needs to defend it in interviews. So:
+
+- Default to a nudge: the concept, the gotcha, what to search in the provider docs.
+- Give argument NAMES when he is stuck on which arguments exist.
+- Only give complete working code if he explicitly asks for it ("just show me",
+  "give me the code"). Then give it, without a lecture.
+- If he shares an error, explain what it actually means before suggesting a fix.
+- You may read his files to see what he has written and spot the real problem.
+
+Style: plain language, short. No preamble, no "great question". Concrete over
+abstract. If something is a real tradeoff, say so rather than pretending there is
+one right answer. Use markdown sparingly -- short paragraphs, a list only when
+listing.
+
+Never invent Azure argument names. If unsure, say which doc page to check."""
 
 _cache: dict[str, tuple[float, object]] = {}
 _lock = threading.Lock()
@@ -190,6 +221,85 @@ def ep_azure(lab_id: str):
     return cached(f"az:{lab_id}", 45, go)
 
 
+def chat_file(lab_id: str) -> Path:
+    d = lab_dir(lab_id) / "docs"
+    d.mkdir(parents=True, exist_ok=True)
+    return d / "lab-chat.json"
+
+
+def chat_load(lab_id: str) -> dict:
+    f = chat_file(lab_id)
+    if f.is_file():
+        try:
+            return json.loads(f.read_text())
+        except Exception:
+            pass
+    return {}
+
+
+def ep_chat_history(lab_id: str, step: str):
+    return {"turns": chat_load(lab_id).get(step, {}).get("turns", [])}
+
+
+def ep_chat(lab_id: str, body: dict):
+    step = str(body.get("step") or "general")[:40]
+
+    if body.get("reset"):
+        store = chat_load(lab_id)
+        store.pop(step, None)
+        chat_file(lab_id).write_text(json.dumps(store, indent=2))
+        return {"ok": True, "reset": step}
+
+    msg = (body.get("message") or "").strip()
+    if not msg:
+        return {"error": "empty message"}
+
+    d = lab_dir(lab_id)
+    store = chat_load(lab_id)
+    thread = store.setdefault(step, {"session": None, "turns": []})
+
+    context = body.get("context") or ""
+    first = thread["session"] is None
+
+    prompt = msg if not first else (
+        f"We are working through step {step} of the lab.\n\n"
+        f"{context}\n\nHis question: {msg}" if context else msg)
+
+    def invoke(session_id: str | None, resume: bool, text: str):
+        cmd = ["claude", "-p", text,
+               "--model", CHAT_MODEL,
+               "--allowed-tools", *CHAT_TOOLS,
+               "--append-system-prompt", TUTOR_PROMPT]
+        if resume:
+            cmd += ["--resume", session_id]
+        elif session_id:
+            cmd += ["--session-id", session_id]
+        return run(cmd, cwd=d, timeout=180)
+
+    if first:
+        sid = str(uuid.uuid4())
+        code, out = invoke(sid, False, prompt)
+    else:
+        sid = thread["session"]
+        code, out = invoke(sid, True, prompt)
+        if code != 0:
+            # Session expired or lost -- start a fresh one with context restored.
+            sid = str(uuid.uuid4())
+            restored = (f"{context}\n\nHis question: {msg}" if context else msg)
+            code, out = invoke(sid, False, restored)
+
+    reply = out.strip()
+    if code != 0:
+        return {"error": reply[-800:] or f"claude exited {code}"}
+
+    ts = time.strftime("%Y-%m-%d %H:%M")
+    thread["session"] = sid
+    thread["turns"].append({"role": "user", "text": msg, "ts": ts})
+    thread["turns"].append({"role": "assistant", "text": reply, "ts": ts})
+    chat_file(lab_id).write_text(json.dumps(store, indent=2))
+    return {"reply": reply}
+
+
 ROUTES = {
     "/api/labs":      lambda q, b: ep_labs(),
     "/api/lab":       lambda q, b: ep_lab(q.get("id", ["01-cost-visibility"])[0]),
@@ -197,6 +307,8 @@ ROUTES = {
     "/api/terraform": lambda q, b: ep_terraform(q.get("id", ["01-cost-visibility"])[0]),
     "/api/evidence":  lambda q, b: ep_evidence(q.get("id", ["01-cost-visibility"])[0]),
     "/api/azure":     lambda q, b: ep_azure(q.get("id", ["01-cost-visibility"])[0]),
+    "/api/chat":      lambda q, b: ep_chat_history(q.get("id", ["01-cost-visibility"])[0],
+                                                   q.get("step", ["general"])[0]),
 }
 
 MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -247,6 +359,12 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(n) or b"{}")
         except Exception:
             return self._json({"error": "bad json"}, 400)
+
+        if u.path == "/api/chat":
+            try:
+                return self._json(ep_chat(q.get("id", ["01-cost-visibility"])[0], body))
+            except Exception as e:
+                return self._json({"error": str(e)}, 500)
 
         if u.path == "/api/state":
             try:

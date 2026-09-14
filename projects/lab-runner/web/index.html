@@ -54,6 +54,29 @@
 
 </div>
 <div class="toast" id="toast"></div>
+
+<button id="chatFab" title="Ask about this step">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l2-4.9A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>
+  Ask Claude
+</button>
+
+<div id="chatDock" role="dialog" aria-label="Lab tutor">
+  <div class="chat-head">
+    <div class="t">
+      <b>Lab tutor</b>
+      <span id="chatScope">general</span>
+    </div>
+    <button id="chatClear" title="Clear this thread" aria-label="Clear thread">&#8635;</button>
+    <button id="chatClose" title="Close" aria-label="Close">&times;</button>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-hintrow" id="chatQuick"></div>
+  <div class="chat-foot">
+    <textarea id="chatInput" rows="1" placeholder="Ask about this step..."></textarea>
+    <button id="chatSend">Send</button>
+  </div>
+</div>
 <script src="app.js"></script>
+<script src="chat.js"></script>
 </body>
 </html>

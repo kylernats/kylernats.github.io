@@ -23,6 +23,11 @@ Then visit <http://127.0.0.1:7878>.
 - **Three-tier hints** — nudge, then argument names, then working code. The
   level you opened is recorded, so the write-up can stay honest about which
   parts you wrote unaided
+- **Built-in tutor** — a chat dock scoped to whichever step you are reading. It
+  routes through the local `claude` CLI in print mode, so it uses the existing
+  Claude Code plan rather than a separate API key. Read-only tools, so it can
+  inspect your actual Terraform and tell you what is wrong, but cannot change
+  anything. Threads are per-step and persist in `docs/lab-chat.json`
 - **Per-step notes** — saved to `docs/lab-state.json` in the lab's folder, and
   exportable to markdown. This is the raw material for the case study
 
@@ -33,6 +38,8 @@ Then visit <http://127.0.0.1:7878>.
   browser reaches a shell
 - Static file serving is confined to `web/`
 - Lab ids are validated against `[0-9a-z-]` before touching the filesystem
+- The tutor runs with `--allowed-tools Read Grep Glob` only — no Write, Edit, or
+  Bash, so it cannot modify your work or run anything
 
 ## Adding a lab
 
