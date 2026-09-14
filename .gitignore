@@ -13,3 +13,6 @@ node_modules/
 !*.tfvars.example
 crash.log
 .terraform.lock.hcl
+
+# Lab runner
+__pycache__/

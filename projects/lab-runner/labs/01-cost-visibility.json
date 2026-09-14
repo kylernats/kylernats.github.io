@@ -1,0 +1,705 @@
+{
+  "id": "01-cost-visibility",
+  "eyebrow": "Lab 01 \u00b7 Cloud Security",
+  "title": "Cost Visibility Dashboard",
+  "subtitle": "Build the system that catches a cloud bill going wrong \u2014 while there's still time to stop it.",
+  "intro": "<strong>The problem.</strong> A business estimates $5,000/month. The first bill is $8,000. Nobody notices. Three months later it's $30,000 and the money is gone. Nothing failed and nobody was hacked \u2014 the bill just grew where nobody was looking. You're building the smoke detector for that.",
+  "phases": [
+    {
+      "id": "P0",
+      "title": "Baseline",
+      "blurb": "Evidence of the 'before'. These can never be retaken once resources exist.",
+      "steps": [
+        {
+          "id": "0.1",
+          "title": "Capture the empty state",
+          "notes": true,
+          "what": "Three screenshots proving nothing was pre-built, plus a machine-readable snapshot of the Azure API.",
+          "why": "Any claim you make later rests on this. A dashboard full of data means nothing if you can't show what it looked like before.",
+          "commands": [
+            {
+              "label": "Snapshot the API",
+              "cmd": "./scripts/snapshot.sh baseline"
+            }
+          ],
+          "shots": [
+            {
+              "slug": "baseline-empty-rg",
+              "desc": "Portal \u2192 Resource groups. Should show only <code>NetworkWatcherRG</code>.",
+              "caption": "Resource groups before the lab"
+            },
+            {
+              "slug": "baseline-credit",
+              "desc": "Portal \u2192 Subscriptions \u2192 your subscription. Shows Owner role and the $200 credit.",
+              "caption": "Owner role and $200 credit before deployment"
+            },
+            {
+              "slug": "baseline-cost-analysis",
+              "desc": "Cost Management \u2192 Cost analysis. Must show <code>BUDGET: NONE</code> and <code>FORECAST UNAVAILABLE</code>.",
+              "caption": "Cost analysis with no budget and no forecast"
+            }
+          ],
+          "callout": "<strong>Already done.</strong> These three are captured and redacted. Tick this and move on."
+        }
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Foundation",
+      "blurb": "Open <code>terraform/main.tf</code> and work top to bottom. Terraform in one sentence: you describe what you want, and it makes Azure match.",
+      "steps": [
+        {
+          "id": "1.1",
+          "title": "Resource group",
+          "resource": "azurerm_resource_group",
+          "what": "A folder. Everything in this lab goes inside it, and deleting the folder deletes everything in it.",
+          "real": "This is exactly why cloud bills spiral. People create things in random places, forget them, and pay for years. One folder per project means one command cleans it all up.",
+          "props": [
+            "<code>name</code> \u2014 <code>\"rg-${var.name_prefix}\"</code>, which gives <code>rg-costvis</code>",
+            "<code>location</code> \u2014 <code>var.location</code>",
+            "<code>tags</code> \u2014 <code>var.tags</code>"
+          ],
+          "why": "Tags are how you answer 'what did this project cost?'. Untagged resources are the reason companies can't attribute their own spending.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_resource_group</code> at <a href=\"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs\" target=\"_blank\">the registry</a> and open Example Usage. It needs three arguments and nothing more."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>location</code>, <code>tags</code>. Use string interpolation for the name so the prefix stays configurable."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_resource_group\" \"main\" {\n  name     = \"rg-${var.name_prefix}\"\n  location = var.location\n  tags     = var.tags\n}"
+            }
+          ]
+        },
+        {
+          "id": "1.2",
+          "title": "Log Analytics workspace",
+          "resource": "azurerm_log_analytics_workspace",
+          "what": "Where logs go so you can search them later. Without it, logs are written and thrown away.",
+          "real": "This is what you'd search after an incident to answer 'who accessed that, and when?'. Here it records who read your cost data.",
+          "props": [
+            "<code>name</code> \u2014 <code>\"law-${var.name_prefix}\"</code>",
+            "<code>location</code> and <code>resource_group_name</code> \u2014 reference the group from 1.1 rather than retyping it",
+            "<code>sku</code> \u2014 <code>\"PerGB2018\"</code> (first 5 GB/month ingested is free)",
+            "<code>retention_in_days</code> \u2014 <code>var.log_retention_days</code>",
+            "<code>tags</code>"
+          ],
+          "why": "Writing <code>azurerm_resource_group.main.name</code> instead of the literal string tells Terraform this depends on that, so it builds them in the right order automatically.",
+          "callout": "<strong>Answer this in DECISIONS.md:</strong> retention defaults to 30 days, not the 730-day maximum. Why deliberately keep <em>less</em>?",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_log_analytics_workspace</code>. The SKU you want is the pay-as-you-go one, and retention is measured in days."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>location</code>, <code>resource_group_name</code>, <code>sku</code>, <code>retention_in_days</code>, <code>tags</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_log_analytics_workspace\" \"main\" {\n  name                = \"law-${var.name_prefix}\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n\n  sku               = \"PerGB2018\"\n  retention_in_days = var.log_retention_days\n\n  tags = var.tags\n}"
+            }
+          ]
+        },
+        {
+          "id": "1.C",
+          "title": "Checkpoint",
+          "notes": false,
+          "what": "Confirm the loop works before going further.",
+          "commands": [
+            {
+              "label": "Run the checker",
+              "cmd": "cd ~/Portfolio/projects/01-cost-visibility && ./scripts/check.sh"
+            }
+          ],
+          "callout": "Expect <strong>10 remaining</strong> and <code>Success! The configuration is valid.</code> Send me the output before continuing \u2014 if your structure needs fixing, better to catch it now than at task 12."
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Identity and access",
+      "blurb": "The security core of the lab.",
+      "steps": [
+        {
+          "id": "1.3",
+          "title": "Managed identity",
+          "resource": "azurerm_user_assigned_identity",
+          "what": "A login for software instead of a person. No password exists, so no password can leak.",
+          "real": "The classic breach: a developer hardcodes a password, pushes it to GitHub, and a bot finds it within minutes. A managed identity removes the password entirely \u2014 Azure handles it invisibly.",
+          "props": [
+            "<code>name</code> \u2014 <code>\"id-${var.name_prefix}-reader\"</code>",
+            "<code>location</code>, <code>resource_group_name</code>, <code>tags</code>"
+          ],
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_user_assigned_identity</code>. It takes the same four basics as the resource group plus a location."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>location</code>, <code>resource_group_name</code>, <code>tags</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_user_assigned_identity\" \"cost_reader\" {\n  name                = \"id-${var.name_prefix}-reader\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n  tags                = var.tags\n}"
+            }
+          ]
+        },
+        {
+          "id": "1.4",
+          "title": "Role assignment \u2014 least privilege",
+          "resource": "azurerm_role_assignment",
+          "what": "The identity above can currently do nothing at all. This grants it exactly one permission: read cost data.",
+          "real": "Ransomware spreads because service accounts have far more access than they need. One over-permissioned backup account can end a company. Least privilege asks: if this is stolen, what's the worst that happens? Here the answer is 'someone learns what your bill was.'",
+          "props": [
+            "<code>scope</code> \u2014 <code>data.azurerm_subscription.current.id</code>. Billing lives at subscription level, not inside your resource group",
+            "<code>role_definition_name</code> \u2014 <code>\"Cost Management Reader\"</code>",
+            "<code>principal_id</code> \u2014 the identity's <code>principal_id</code>"
+          ],
+          "why": "A managed identity has two IDs. <code>principal_id</code> is <em>who it is</em>, used for permissions. <code>client_id</code> is <em>how apps address it</em>. Using the wrong one produces an error that doesn't explain itself.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_role_assignment</code>. Three arguments: where the permission applies, which permission, and who gets it. Think about which of the identity's two IDs represents <em>who it is</em>."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>scope</code>, <code>role_definition_name</code>, <code>principal_id</code>. The scope is the subscription data source's <code>.id</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_role_assignment\" \"cost_reader\" {\n  scope                = data.azurerm_subscription.current.id\n  role_definition_name = \"Cost Management Reader\"\n  principal_id         = azurerm_user_assigned_identity.cost_reader.principal_id\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Storage",
+      "blurb": "'Misconfigured storage bucket' is one of the most common breach headlines there is. This phase is about not being that.",
+      "steps": [
+        {
+          "id": "1.5",
+          "title": "Storage account \u2014 the security baseline",
+          "resource": "azurerm_storage_account",
+          "what": "Cloud file storage. Your daily bill copies land here.",
+          "real": "Millions of records get exposed this way every year, always the same root cause: someone left a container public. Every setting below is a control that has prevented a real breach somewhere.",
+          "props": [
+            "<code>name</code> \u2014 <code>\"st${var.name_prefix}${random_string.suffix.result}\"</code>. No hyphens allowed, and it must be globally unique across all of Azure",
+            "<code>account_tier</code> <code>\"Standard\"</code>, <code>account_replication_type</code> <code>\"LRS\"</code>, <code>account_kind</code> <code>\"StorageV2\"</code>",
+            "<b>HTTPS-only traffic</b> \u2014 no unencrypted connections",
+            "<b>Minimum TLS 1.2</b> \u2014 blocks old, breakable encryption",
+            "<b>Public access disabled</b> \u2014 this is the headline one",
+            "A <code>blob_properties</code> block with versioning on and 7-day soft delete for both blobs and containers"
+          ],
+          "why": "Versioning plus soft delete is ransomware defense. Ransomware encrypts files by overwriting them. With versioning on, the originals are still there.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_storage_account</code>. The security arguments are near the top of the docs page; data protection lives inside a nested <code>blob_properties</code> block. One argument name changed in provider v4 \u2014 if you use the v3 name you'll get a clear error, so read it."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>https_traffic_only_enabled</code>, <code>min_tls_version</code>, <code>allow_nested_items_to_be_public</code>. Inside <code>blob_properties</code>: <code>versioning_enabled</code>, <code>delete_retention_policy</code>, <code>container_delete_retention_policy</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_storage_account\" \"exports\" {\n  name                = \"st${var.name_prefix}${random_string.suffix.result}\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n\n  account_tier             = \"Standard\"\n  account_replication_type = \"LRS\"\n  account_kind             = \"StorageV2\"\n\n  https_traffic_only_enabled      = true\n  min_tls_version                 = \"TLS1_2\"\n  allow_nested_items_to_be_public = false\n\n  blob_properties {\n    versioning_enabled = true\n\n    delete_retention_policy {\n      days = 7\n    }\n\n    container_delete_retention_policy {\n      days = 7\n    }\n  }\n\n  tags = var.tags\n}"
+            }
+          ]
+        },
+        {
+          "id": "1.6",
+          "title": "Storage container",
+          "resource": "azurerm_storage_container",
+          "what": "A folder inside the storage account.",
+          "real": "<code>private</code> means nobody on the internet can read it without credentials. Older systems defaulted to public, which is precisely how those breaches happened.",
+          "props": [
+            "<code>name</code> \u2014 <code>\"cost-exports\"</code>",
+            "<code>storage_account_id</code> \u2014 reference the account from 1.5",
+            "<code>container_access_type</code> \u2014 <code>\"private\"</code>"
+          ],
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_storage_container</code>. In provider v4 it takes the account by ID, not by name \u2014 that changed from v3."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>storage_account_id</code>, <code>container_access_type</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_storage_container\" \"exports\" {\n  name                  = \"cost-exports\"\n  storage_account_id    = azurerm_storage_account.exports.id\n  container_access_type = \"private\"\n}"
+            }
+          ]
+        },
+        {
+          "id": "1.7",
+          "title": "Diagnostic settings",
+          "resource": "azurerm_monitor_diagnostic_setting",
+          "what": "Turns on logging for the storage account and sends it to the workspace from 1.2.",
+          "real": "After any breach the first question is 'what did they access?'. Without this there is no answer. Cost data is sensitive \u2014 it reveals what systems you run and how big you are.",
+          "props": [
+            "<code>target_resource_id</code> \u2014 the account ID with <code>\"/blobServices/default\"</code> appended. The blob <em>service</em>, not the account",
+            "<code>log_analytics_workspace_id</code> \u2014 the workspace from 1.2",
+            "Three log categories: <code>StorageRead</code>, <code>StorageWrite</code>, <code>StorageDelete</code>",
+            "One metric category: <code>Transaction</code>"
+          ],
+          "why": "Use <code>enabled_metric</code>, not <code>metric</code>. The old name is deprecated and disappears in the next major provider version.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_monitor_diagnostic_setting</code>. Log categories are repeated blocks, one per category."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>target_resource_id</code>, <code>log_analytics_workspace_id</code>, three <code>enabled_log</code> blocks, one <code>enabled_metric</code> block."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_monitor_diagnostic_setting\" \"storage_blob\" {\n  name                       = \"diag-blob\"\n  target_resource_id         = \"${azurerm_storage_account.exports.id}/blobServices/default\"\n  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id\n\n  enabled_log {\n    category = \"StorageRead\"\n  }\n\n  enabled_log {\n    category = \"StorageWrite\"\n  }\n\n  enabled_log {\n    category = \"StorageDelete\"\n  }\n\n  enabled_metric {\n    category = \"Transaction\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Alerts",
+      "blurb": "Open <code>terraform/monitoring.tf</code>.",
+      "steps": [
+        {
+          "id": "2.1",
+          "title": "Action group",
+          "resource": "azurerm_monitor_action_group",
+          "what": "The delivery list. Alerts don't send themselves \u2014 they hand off to an action group, which emails, texts, or calls.",
+          "real": "When you need to add your manager to every alert, you change one action group instead of editing every rule and forgetting two.",
+          "props": [
+            "<code>name</code>, <code>resource_group_name</code>, and <code>short_name</code> \u2014 <code>\"costalert\"</code> (max 12 chars; Azure uses it as an SMS prefix)",
+            "One email receiver per address in <code>var.alert_emails</code>, each with the common alert schema enabled"
+          ],
+          "why": "<code>var.alert_emails</code> is a <em>list</em>. A single hardcoded block only handles one address \u2014 you need Terraform's <code>dynamic</code> blocks, which generate one block per list item.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_monitor_action_group</code>, then look up <a href=\"https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks\" target=\"_blank\">dynamic blocks</a>. Inside a dynamic block named <code>email_receiver</code>, the iterator is also called <code>email_receiver</code>, with <code>.key</code> and <code>.value</code>."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>resource_group_name</code>, <code>short_name</code>, <code>tags</code>, plus a <code>dynamic \"email_receiver\"</code> with <code>for_each = var.alert_emails</code> and a <code>content</code> block setting <code>name</code>, <code>email_address</code>, <code>use_common_alert_schema</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_monitor_action_group\" \"cost\" {\n  name                = \"ag-${var.name_prefix}\"\n  resource_group_name = azurerm_resource_group.main.name\n  short_name          = \"costalert\"\n\n  dynamic \"email_receiver\" {\n    for_each = var.alert_emails\n\n    content {\n      name                    = \"email-${email_receiver.key}\"\n      email_address           = email_receiver.value\n      use_common_alert_schema = true\n    }\n  }\n\n  tags = var.tags\n}"
+            }
+          ]
+        },
+        {
+          "id": "2.2",
+          "title": "Cost anomaly alert",
+          "resource": "azurerm_cost_anomaly_alert",
+          "what": "Azure learns your normal daily spend and tells you when today doesn't match.",
+          "real": "A monthly budget is slow. If something starts costing $200/day on the 3rd, the budget stays silent until the running total crosses a threshold \u2014 maybe two weeks and $2,800 later. The anomaly alert catches the shape changing the next day.",
+          "props": [
+            "<code>name</code>, <code>display_name</code>, <code>subscription_id</code>",
+            "<code>email_subject</code>, <code>email_addresses</code>, <code>message</code>"
+          ],
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search \"cost anomaly\" at the registry. This one emails directly rather than going through an action group."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>display_name</code>, <code>subscription_id</code>, <code>email_subject</code>, <code>email_addresses</code>, <code>message</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_cost_anomaly_alert\" \"main\" {\n  name            = \"anomaly-${var.name_prefix}\"\n  display_name    = \"Daily cost anomaly\"\n  subscription_id = data.azurerm_subscription.current.id\n  email_subject   = \"Azure cost anomaly detected\"\n  email_addresses = var.alert_emails\n  message         = \"Daily spend deviated from the learned pattern. Check Cost Analysis for the responsible resource.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "The budget",
+      "blurb": "Open <code>terraform/budget.tf</code>. This is the centrepiece \u2014 get the threshold design right and the rest is plumbing.",
+      "steps": [
+        {
+          "id": "3.1",
+          "title": "Subscription budget",
+          "resource": "azurerm_consumption_budget_subscription",
+          "what": "A spending limit that emails you as you approach it.",
+          "props": [
+            "<code>name</code>, <code>subscription_id</code> \u2014 the <em>full resource ID</em>, not a bare GUID",
+            "<code>amount</code> from <code>var.monthly_budget</code>, <code>time_grain</code> monthly",
+            "A <code>time_period</code> block using the two date variables",
+            "<b>Four <code>notification</code> blocks</b> \u2014 see the table below"
+          ],
+          "table": {
+            "head": [
+              "threshold",
+              "threshold_type",
+              "What it means"
+            ],
+            "rows": [
+              [
+                "50",
+                "<code>Actual</code>",
+                "Half the budget is gone"
+              ],
+              [
+                "80",
+                "<code>Actual</code>",
+                "Getting close \u2014 go look"
+              ],
+              [
+                "100",
+                "<code>Actual</code>",
+                "Budget is gone"
+              ],
+              [
+                "100",
+                "<code>Forecasted</code>",
+                "<b>On pace to blow it</b>"
+              ]
+            ]
+          },
+          "callout": "<strong>This table is the whole lab.</strong> The first three are history \u2014 they tell you money is already spent. The fourth is a warning that arrives while you can still act. When an interviewer asks what you'd do differently from a default setup, this is the answer.",
+          "why": "Each notification needs <code>enabled</code>, <code>threshold</code>, <code>operator</code>, <code>threshold_type</code>, <code>contact_emails</code>, and <code>contact_groups</code> pointing at the action group from 2.1.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_consumption_budget_subscription</code>. Notifications are repeated blocks \u2014 four of them. The operator is the same for all four."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "Each block: <code>enabled</code>, <code>threshold</code>, <code>operator = \"GreaterThanOrEqualTo\"</code>, <code>threshold_type</code>, <code>contact_emails = var.alert_emails</code>, <code>contact_groups = [azurerm_monitor_action_group.cost.id]</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_consumption_budget_subscription\" \"main\" {\n  name            = \"budget-${var.name_prefix}\"\n  subscription_id = data.azurerm_subscription.current.id\n\n  amount     = var.monthly_budget\n  time_grain = \"Monthly\"\n\n  time_period {\n    start_date = var.budget_start_date\n    end_date   = var.budget_end_date\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 50.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Actual\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 80.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Actual\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 100.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Actual\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 100.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Forecasted\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Export and outputs",
+      "steps": [
+        {
+          "id": "4.1",
+          "title": "Daily cost export",
+          "resource": "azurerm_subscription_cost_management_export",
+          "what": "Azure writes a CSV of your real usage into storage every day.",
+          "real": "The portal is fine for 'what am I spending now'. It's useless for 'what did this look like in March' once the view resets. The export is your own permanent copy.",
+          "props": [
+            "<code>name</code>, <code>subscription_id</code>, daily recurrence, and the two period dates",
+            "An <code>export_data_storage_location</code> block pointing at the container from 1.6, with <code>root_folder_path = \"daily\"</code>",
+            "<code>export_data_options</code> with <code>type = \"ActualCost\"</code> and <code>time_frame = \"MonthToDate\"</code>",
+            "<code>depends_on</code> the role assignment from 1.4"
+          ],
+          "why": "Terraform normally works out order by watching which resources reference each other. This export never mentions the role assignment, so Terraform doesn't know it must wait for permissions \u2014 and would happily create an export that silently fails its first run. You have to say it out loud.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "Search <code>azurerm_subscription_cost_management_export</code>. Two nested blocks: where it writes, and what it writes. ActualCost is what was billed; AmortizedCost spreads reservation purchases over time."
+            },
+            {
+              "label": "Which arguments exactly?",
+              "text": "<code>name</code>, <code>subscription_id</code>, <code>recurrence_type</code>, <code>recurrence_period_start_date</code>, <code>recurrence_period_end_date</code>, plus the two nested blocks and <code>depends_on</code>."
+            },
+            {
+              "label": "Show me the code",
+              "code": "resource \"azurerm_subscription_cost_management_export\" \"daily\" {\n  name                         = \"export-${var.name_prefix}-daily\"\n  subscription_id              = data.azurerm_subscription.current.id\n  recurrence_type              = \"Daily\"\n  recurrence_period_start_date = var.budget_start_date\n  recurrence_period_end_date   = var.budget_end_date\n\n  export_data_storage_location {\n    container_id     = azurerm_storage_container.exports.id\n    root_folder_path = \"daily\"\n  }\n\n  export_data_options {\n    type = \"ActualCost\"\n\n    time_frame = \"MonthToDate\"\n  }\n\n  depends_on = [azurerm_role_assignment.cost_reader]\n}"
+            }
+          ]
+        },
+        {
+          "id": "5.1",
+          "title": "Outputs",
+          "notes": true,
+          "what": "Print the things you'd otherwise go hunting in the portal for.",
+          "props": [
+            "Resource group name, storage account name, budget name, the identity's client ID",
+            "Each needs a <code>description</code>"
+          ],
+          "why": "Terraform doesn't require descriptions. Anyone reading your code in six months does.",
+          "hints": [
+            {
+              "label": "Point me in the right direction",
+              "text": "An output block is <code>output \"name\" { value = ...  description = \"...\" }</code>. Reference resources the same way you did inside them."
+            },
+            {
+              "label": "Which outputs exactly?",
+              "text": "<code>resource_group</code>, <code>storage_account</code>, <code>budget_name</code>, <code>cost_reader_client_id</code>, and optionally the monthly budget amount."
+            },
+            {
+              "label": "Show me the code",
+              "code": "output \"resource_group\" {\n  description = \"Resource group holding everything in this project.\"\n  value       = azurerm_resource_group.main.name\n}\n\noutput \"storage_account\" {\n  description = \"Storage account receiving the daily cost export.\"\n  value       = azurerm_storage_account.exports.name\n}\n\noutput \"workbook_url\" {\n  description = \"Direct link to the cost dashboard in the Azure portal.\"\n  value       = \"https://portal.azure.com/#@/resource${azurerm_application_insights_workbook.cost.id}/workbook\"\n}\n\noutput \"budget_name\" {\n  description = \"Name of the subscription budget.\"\n  value       = azurerm_consumption_budget_subscription.main.name\n}\n\noutput \"cost_reader_client_id\" {\n  description = \"Client ID of the least-privilege identity used to read cost data.\"\n  value       = azurerm_user_assigned_identity.cost_reader.client_id\n}\n\noutput \"monthly_budget_usd\" {\n  description = \"Budget the alert thresholds are calculated against.\"\n  value       = var.monthly_budget\n}"
+            }
+          ]
+        },
+        {
+          "id": "5.C",
+          "title": "Final checkpoint",
+          "notes": false,
+          "commands": [
+            {
+              "label": "Everything should be green",
+              "cmd": "cd ~/Portfolio/projects/01-cost-visibility && ./scripts/check.sh"
+            }
+          ],
+          "callout": "Zero TODOs, validation passing, and every requirement check <code>[ok]</code>."
+        }
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Deploy",
+      "blurb": "Plan first, always. In a real job you plan, someone reviews it, then you apply. That habit is what prevents outages.",
+      "steps": [
+        {
+          "id": "7.1",
+          "title": "Plan",
+          "notes": true,
+          "what": "Shows exactly what will happen without doing it.",
+          "commands": [
+            {
+              "cmd": "cd ~/Portfolio/projects/01-cost-visibility/terraform\nterraform plan -out=tfplan"
+            }
+          ],
+          "shots": [
+            {
+              "slug": "terraform-plan",
+              "desc": "Terminal showing <code>Plan: 14 to add, 0 to change, 0 to destroy.</code>",
+              "caption": "Plan output: 14 resources to add"
+            }
+          ]
+        },
+        {
+          "id": "7.2",
+          "title": "Apply",
+          "notes": true,
+          "commands": [
+            {
+              "cmd": "terraform apply tfplan"
+            },
+            {
+              "label": "Then capture the API state",
+              "cmd": "cd .. && ./scripts/snapshot.sh post-apply"
+            }
+          ],
+          "shots": [
+            {
+              "slug": "terraform-apply",
+              "desc": "Terminal showing <code>Apply complete! Resources: 14 added</code> and the outputs block.",
+              "caption": "Apply complete: 14 resources created"
+            }
+          ],
+          "callout": "<strong>If it errors, paste it to me exactly.</strong> Errors are the most valuable content in this lab \u2014 they're what makes the write-up real instead of a tutorial."
+        }
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Verify every control",
+      "blurb": "Terraform saying 'created' is not proof a control is on. This is the difference between 'I configured it' and 'I verified it'.",
+      "steps": [
+        {
+          "id": "8.1",
+          "title": "Portal verification sweep",
+          "notes": true,
+          "what": "Five screenshots, one per control, each showing the setting actually enabled.",
+          "shots": [
+            {
+              "slug": "resource-group",
+              "desc": "Resource groups \u2192 <code>rg-costvis</code>. Show all resources and the tags.",
+              "caption": "All resources deployed with project tags"
+            },
+            {
+              "slug": "budget-thresholds",
+              "desc": "Cost Management \u2192 Budgets \u2192 <code>budget-costvis</code>. <b>Must show all four conditions including Forecasted.</b>",
+              "caption": "Budget with three actual thresholds and a forecast alert"
+            },
+            {
+              "slug": "storage-security",
+              "desc": "Storage account \u2192 Configuration. Secure transfer <b>Enabled</b>, minimum TLS <b>1.2</b>.",
+              "caption": "Storage enforcing HTTPS-only and TLS 1.2"
+            },
+            {
+              "slug": "storage-dataprotection",
+              "desc": "Storage account \u2192 Data protection. Versioning on, soft delete 7 days.",
+              "caption": "Blob versioning and 7-day soft delete enabled"
+            },
+            {
+              "slug": "least-privilege",
+              "desc": "Managed identity \u2192 Azure role assignments. <b>Exactly one role.</b>",
+              "caption": "Identity holds only Cost Management Reader"
+            }
+          ],
+          "commands": [
+            {
+              "cmd": "./scripts/snapshot.sh controls-verified"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Prove the control works",
+      "blurb": "The most important phase, and the one almost nobody does.",
+      "steps": [
+        {
+          "id": "9.1",
+          "title": "Test that least privilege denies",
+          "notes": true,
+          "what": "Sign in as the managed identity and try something outside its role. It must fail. Then read cost data, which must succeed.",
+          "real": "This is what a security audit actually asks for. Not 'is MFA enabled' but 'show me a login being blocked'. Evidence beats configuration.",
+          "callout": "<strong>Tell me when you reach this step and I'll give you the exact commands.</strong> They depend on values from your apply outputs.",
+          "shots": [
+            {
+              "slug": "rbac-denied",
+              "desc": "Terminal showing <code>AuthorizationFailed</code> when the identity attempts a write.",
+              "caption": "Identity denied when attempting an action outside its role"
+            },
+            {
+              "slug": "rbac-allowed",
+              "desc": "Terminal showing the same identity successfully reading cost data.",
+              "caption": "Same identity permitted to read cost data"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Prove the alert reaches a human",
+      "blurb": "Budgets evaluate every 12\u201324 hours, so waiting for a real trigger isn't practical. Test the delivery path directly.",
+      "steps": [
+        {
+          "id": "10.1",
+          "title": "Test the action group",
+          "notes": true,
+          "what": "Portal \u2192 Action group <code>ag-costvis</code> \u2192 <b>Test action group</b> \u2192 Budget alert \u2192 Test.",
+          "why": "The inbox screenshot closes the loop: code \u2192 cloud \u2192 a human being told. That's the entire point of the system.",
+          "shots": [
+            {
+              "slug": "actiongroup-test",
+              "desc": "The test result showing success.",
+              "caption": "Action group test succeeded"
+            },
+            {
+              "slug": "alert-email",
+              "desc": "<b>Your actual inbox</b> with the alert email in it.",
+              "caption": "Alert email received \u2014 full path from Terraform to inbox"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "The dashboard",
+      "blurb": "Terraform built the workbook shell. The cost charts get added in the portal, because hand-writing the query JSON produces dashboards that silently show nothing.",
+      "steps": [
+        {
+          "id": "11.1",
+          "title": "Add the cost tiles",
+          "notes": true,
+          "what": "Workbook \u2192 Edit \u2192 Add \u2192 Add query \u2192 Data source: <b>Azure Resource Manager</b>.",
+          "shots": [
+            {
+              "slug": "workbook-query",
+              "desc": "The ARM query configuration in edit mode.",
+              "caption": "Workbook ARM data source querying Cost Management"
+            },
+            {
+              "slug": "workbook-rendered",
+              "desc": "The chart actually rendering data.",
+              "caption": "Cost dashboard rendering live data"
+            },
+            {
+              "slug": "workbook-editor",
+              "desc": "Advanced Editor showing the JSON.",
+              "caption": "Workbook JSON for export back into Terraform"
+            }
+          ],
+          "callout": "Then paste the JSON to me and I'll fold it into <code>workbook.tf</code>, so the finished dashboard is reproducible from code instead of hand-built."
+        }
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Next day \u2014 real data",
+      "blurb": "Cost data lags 8\u201324 hours. Come back tomorrow.",
+      "steps": [
+        {
+          "id": "12.1",
+          "title": "Confirm the export landed",
+          "notes": true,
+          "shots": [
+            {
+              "slug": "export-blob",
+              "desc": "Storage \u2192 Containers \u2192 <code>cost-exports</code> \u2192 <code>daily</code> \u2192 the CSV Azure wrote.",
+              "caption": "Daily cost export CSV written to blob storage"
+            },
+            {
+              "slug": "cost-analysis-populated",
+              "desc": "Cost analysis now showing <code>BUDGET: $25</code> and a forecast \u2014 the direct counterpart to your baseline shot.",
+              "caption": "Cost analysis with budget and forecast active"
+            }
+          ],
+          "commands": [
+            {
+              "cmd": "./scripts/snapshot.sh export-landed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P13",
+      "title": "Tear it down",
+      "blurb": "Most portfolios skip this. Doing it demonstrates the exact discipline the project is about.",
+      "steps": [
+        {
+          "id": "13.1",
+          "title": "Destroy and record the total",
+          "notes": true,
+          "commands": [
+            {
+              "cmd": "cd ~/Portfolio/projects/01-cost-visibility/terraform\nterraform destroy"
+            },
+            {
+              "cmd": "cd .. && ./scripts/snapshot.sh post-destroy"
+            }
+          ],
+          "shots": [
+            {
+              "slug": "terraform-destroy",
+              "desc": "Terminal showing <code>Destroy complete! Resources: 14 destroyed.</code>",
+              "caption": "All 14 resources destroyed"
+            },
+            {
+              "slug": "final-cost",
+              "desc": "Cost analysis showing total spend for the whole lab.",
+              "caption": "Total cost of the entire lab"
+            }
+          ],
+          "callout": "<strong>This is your most quotable artifact.</strong> 'I built, deployed, tested, and documented a cost governance system for $0.43' is a sentence that lands in an interview."
+        }
+      ]
+    }
+  ]
+}
