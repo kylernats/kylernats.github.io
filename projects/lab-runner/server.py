@@ -20,6 +20,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
+import report
+
 PORT = 7878
 ROOT = Path(__file__).resolve().parent
 PROJECTS = ROOT.parent
@@ -300,6 +302,44 @@ def ep_chat(lab_id: str, body: dict):
     return {"reply": reply}
 
 
+CHROME_PATHS = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+]
+
+
+def ep_report_html(lab_id: str) -> str:
+    return report.build(ep_lab(lab_id), ep_state(lab_id), lab_dir(lab_id),
+                        f"/evidence?id={lab_id}&file=")
+
+
+def ep_report_pdf(lab_id: str):
+    """Print the report to PDF with headless Chrome, which is already installed."""
+    chrome = next((c for c in CHROME_PATHS if Path(c).is_file()), None)
+    if not chrome:
+        return {"error": "No Chrome/Chromium found. Open the HTML report and use "
+                         "Cmd+P, then Save as PDF."}
+
+    out_dir = lab_dir(lab_id) / "docs" / "reports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pdf = out_dir / f"{lab_id}-report-{time.strftime('%Y%m%d')}.pdf"
+
+    code, out = run([chrome, "--headless=new", "--disable-gpu",
+                     "--no-pdf-header-footer",
+                     f"--print-to-pdf={pdf}",
+                     "--virtual-time-budget=15000",
+                     f"http://127.0.0.1:{PORT}/report?id={lab_id}"], timeout=120)
+
+    if not pdf.is_file():
+        return {"error": (out or "chrome produced no file")[-600:]}
+
+    return {"ok": True,
+            "path": str(pdf),
+            "rel": str(pdf.relative_to(PROJECTS.parent)),
+            "size_kb": round(pdf.stat().st_size / 1024)}
+
+
 ROUTES = {
     "/api/labs":      lambda q, b: ep_labs(),
     "/api/lab":       lambda q, b: ep_lab(q.get("id", ["01-cost-visibility"])[0]),
@@ -309,6 +349,7 @@ ROUTES = {
     "/api/azure":     lambda q, b: ep_azure(q.get("id", ["01-cost-visibility"])[0]),
     "/api/chat":      lambda q, b: ep_chat_history(q.get("id", ["01-cost-visibility"])[0],
                                                    q.get("step", ["general"])[0]),
+    "/api/report":    lambda q, b: ep_report_pdf(q.get("id", ["01-cost-visibility"])[0]),
 }
 
 MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -342,6 +383,26 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(ROUTES[u.path](q, None))
             except Exception as e:
                 return self._json({"error": str(e)}, 500)
+
+        if u.path == "/report":
+            lab_id = q.get("id", ["01-cost-visibility"])[0]
+            try:
+                return self._send(200, ep_report_html(lab_id).encode(), "text/html; charset=utf-8")
+            except Exception as e:
+                return self._send(500, str(e).encode(), "text/plain")
+
+        if u.path == "/evidence":
+            lab_id = q.get("id", ["01-cost-visibility"])[0]
+            name = q.get("file", [""])[0]
+            if not re.fullmatch(r"[\w.-]{1,80}\.png", name):
+                return self._send(404, b"not found", "text/plain")
+            try:
+                f = lab_dir(lab_id) / "docs" / "evidence" / "screenshots" / name
+            except ValueError:
+                return self._send(404, b"not found", "text/plain")
+            if not f.is_file():
+                return self._send(404, b"not found", "text/plain")
+            return self._send(200, f.read_bytes(), "image/png")
 
         # Static files, confined to web/
         rel = "index.html" if u.path in ("/", "") else u.path.lstrip("/")

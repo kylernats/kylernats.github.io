@@ -223,3 +223,12 @@ tr:last-child td{border-bottom:none}
 .chat-hintrow button{background:var(--surface-hi);border:1px solid var(--border);color:var(--muted);
   border-radius:99px;padding:5px 11px;font:12px var(--sans);cursor:pointer}
 .chat-hintrow button:hover{color:var(--text);border-color:var(--accent-line)}
+
+/* file location line on each task */
+.where{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-4px 0 16px;
+  padding:9px 13px;background:var(--bg-subtle);border:1px solid var(--border);
+  border-left:2px solid var(--accent);border-radius:8px;font-size:13px}
+.where .k{color:var(--faint);font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.where code{background:var(--surface-hi);color:var(--accent-hi)}
+.lvlq{color:var(--faint);border-color:var(--border-hi);background:transparent;
+  min-width:20px;text-align:center}

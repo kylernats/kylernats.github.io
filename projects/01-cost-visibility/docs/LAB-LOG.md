@@ -1,10 +1,6 @@
 # Lab log — 01 Cost Visibility Dashboard
 
-Running record of what was done, in order, including what broke. Kyler runs the
-commands; entries get written up as the work happens rather than reconstructed
-afterward.
-
-Format: what was attempted, what happened, what fixed it.
+What I did, in order, including what broke. Written as it happened.
 
 ---
 
@@ -18,20 +14,18 @@ Format: what was attempted, what happened, what fixed it.
 AADSTS530035: Access has been blocked by security defaults.
 ```
 
-The tenant has Entra ID security defaults enabled, which block the device code
-flow. That is deliberate on Microsoft's part: device code is a known phishing
-vector, because an attacker can generate a code and talk a target into entering
-it on their own machine.
+Security defaults are on in this tenant and they block device code login.
+Microsoft does this on purpose. Device code is a known phishing method, since an
+attacker can generate a code and get someone to enter it themselves.
 
-**Fix:** browser-based `az login --tenant <id>`. The auth code flow ties the
-session to the browser that started it, so security defaults allow it.
+**Fix:** browser login with `az login --tenant <id>`. That flow ties the login to
+the browser that started it, so it isn't blocked.
 
-Worth noting the temptation here was to disable security defaults to make the
-tooling work. That would have traded a real protection for convenience on a
-subscription that holds billing data.
+I could have turned security defaults off to make the CLI work. Not worth it on
+the subscription holding my billing data.
 
-**Account confirmed:** Owner on `Azure subscription 1`, which is the level
-needed to create the subscription-scope role assignment later.
+**Account:** Owner on `Azure subscription 1`. I need that level to create the
+subscription-scope role assignment later.
 
 ---
 
@@ -45,9 +39,8 @@ Three baseline screenshots captured before any resource existed: empty resource
 group list, subscription showing Owner and $200 credit, and Cost analysis
 reading `BUDGET: NONE` / `FORECAST UNAVAILABLE`.
 
-The last one is the useful one. Those same two tiles will read `$25` and show a
-live forecast once the budget is deployed, so the before/after sits in a single
-frame.
+The last one is the useful one. Those two tiles will read `$25` and show a
+forecast once the budget is deployed, so the before and after are in one image.
 
 ### Bug: screenshot filenames would not move
 
@@ -85,6 +78,6 @@ arrays are 1-indexed, so the first file was named `.png` and every other name
 shifted by one. Caught it by checking file sizes against the originals rather
 than trusting that the move worked.
 
-**Takeaway:** "No such file or directory" for a file you can see listed means
-the name you are using is not the name on disk. Check the bytes before blaming
-permissions.
+**Takeaway:** if a file shows up in `ls` but every other command says it doesn't
+exist, the name I'm using isn't the name on disk. Check the bytes before assuming
+it's a permissions problem.

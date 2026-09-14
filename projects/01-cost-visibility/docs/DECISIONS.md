@@ -1,8 +1,7 @@
 # Decision log — 01 Cost Visibility Dashboard
 
-Each entry: the decision, the alternatives, and why this one. These are the
-questions an interviewer asks, so the answers get written down while the
-reasoning is fresh.
+What I decided, what else I considered, and why. Written down when I made the
+call, not after.
 
 ---
 
@@ -10,12 +9,10 @@ reasoning is fresh.
 
 **Alternatives:** build it last so it has real spend to display.
 
-**Chose:** first. You instrument cost monitoring before you start spending,
-not after. Building it first also protects the $200 credit while projects
-02–05 get built.
+**Chose:** first. Set up cost monitoring before spending, not after. It also
+protects the $200 credit while I build projects 02-05.
 
-**Tradeoff:** the dashboard is nearly empty at first. Accepted, and documented,
-rather than hidden.
+**Tradeoff:** the dashboard is almost empty at the start.
 
 ---
 
@@ -26,9 +23,9 @@ people configure.
 
 **Chose:** three actual thresholds (50/80/100%) plus a forecast alert at 100%.
 
-**Why:** actual thresholds are backward-looking. They tell you money is already
-gone. The forecast alert fires when the month is *projected* to exceed budget,
-which is the only one that arrives while there is still time to act.
+**Why:** actual thresholds only tell me money is already spent. The forecast
+alert fires when the month is projected to go over, so I still have time to do
+something about it.
 
 ---
 
@@ -38,10 +35,9 @@ which is the only one that arrives while there is still time to act.
 
 **Chose:** `Cost Management Reader`, scoped to the subscription.
 
-**Why:** the identity needs to read billing data and nothing else. If it were
-compromised, the blast radius is disclosure of a bill — not the ability to
-create, modify, or delete resources. Reader would also work but grants
-visibility into every resource's configuration, which is more than required.
+**Why:** it only needs to read billing data. If it got compromised, all someone
+gets is a bill. Reader would work too, but it shows every resource's config,
+which is more access than the job needs.
 
 ---
 
@@ -52,12 +48,10 @@ visibility into every resource's configuration, which is more than required.
 **Chose:** public network access on, with TLS 1.2 minimum, no public blob
 access, and private container ACLs.
 
-**Why:** the Cost Management export service writes from Azure's side and cannot
-reach a fully locked-down account without private endpoints, which are not in
-the free tier.
+**Why:** the export service writes from Azure's side. It can't reach a locked
+down account without private endpoints, and those aren't free.
 
-**This is a real gap, not a solved problem.** In an environment with a budget
-the fix is a private endpoint. Documented here rather than papered over.
+This is a gap, not a fix. With a budget I'd use a private endpoint.
 
 ---
 
@@ -67,11 +61,9 @@ the fix is a private endpoint. Documented here rather than papered over.
 
 **Chose:** LRS.
 
-**Why:** the data is a daily regenerating export of cost data that Azure also
-holds. Losing a region's copy means re-running an export, not losing anything
-irreplaceable. Paying for geo-redundancy here would be spending money to
-protect against a scenario with no real consequence — which is itself the kind
-of decision this project is about.
+**Why:** the export regenerates daily and Azure holds the same data anyway. If I
+lost a region's copy I'd re-run the export. Paying for geo-redundancy here would
+be spending money on a problem I don't have.
 
 ---
 
@@ -86,12 +78,9 @@ than a credential — it grants nothing on its own.
 captured API output. `snapshot.sh` now does the scrub automatically so it
 cannot be forgotten later.
 
-**Why:** there is no upside to publishing them. A subscription ID plus a tenant
-domain plus a known account email is useful for targeted phishing and for
-consent-grant attacks against a tenant, even though none of the three is secret.
-The evidence the screenshots exist to prove — Owner role, $0.00 current cost,
-$200 credit, `BUDGET: NONE` — survives redaction completely.
+**Why:** there's no reason to publish them. None of the three is secret on its
+own, but together they're useful for targeted phishing and consent-grant attacks
+against a tenant. Everything the screenshots are meant to prove still shows.
 
-**Method:** pixelate then Gaussian blur, rather than a light blur. A lightly
-blurred fixed-width font can often be recovered; a downsample to a few pixels
-destroys the information rather than obscuring it.
+**Method:** pixelate first, then blur. A light blur on a fixed-width font can
+often be read back. Downsampling removes the information instead of hiding it.

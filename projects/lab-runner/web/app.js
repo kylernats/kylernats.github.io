@@ -75,6 +75,12 @@
     head.appendChild(titleWrap);
     wrap.appendChild(head);
 
+    if (step.where) {
+      wrap.appendChild(el('div', 'where',
+        `<span class="k">Write it in</span> <code>${esc(step.where.file)}</code>` +
+        `<span class="k">replacing</span> <code>${esc(step.where.marker)}</code>`));
+    }
+
     if (step.what) wrap.appendChild(el('div', 'block', `<div class="label">What it is</div><p>${step.what}</p>`));
     if (step.real) wrap.appendChild(el('div', 'block real', `<div class="label">Real life</div><p>${step.real}</p>`));
     if (step.why) wrap.appendChild(el('div', 'block why', `<div class="label">Why it matters</div><p>${step.why}</p>`));
@@ -121,14 +127,17 @@
       step.hints.forEach((hint, i) => {
         const lvl = i + 1;
         const d = el('details', 'hint');
-        const sum = el('summary', '', `<span class="lvl lvl${lvl}">LEVEL ${lvl}</span> ${esc(hint.label)}`);
+        const badge = step.hintStyle === 'faq'
+          ? '<span class="lvl lvlq">?</span>'
+          : `<span class="lvl lvl${lvl}">LEVEL ${lvl}</span>`;
+        const sum = el('summary', '', `${badge} ${esc(hint.label)}`);
         d.appendChild(sum);
         const body = el('div', 'body');
         if (hint.text) body.appendChild(el('p', '', hint.text));
         if (hint.code) body.appendChild(el('pre', '', `<code>${esc(hint.code)}</code>`));
         d.appendChild(body);
         d.ontoggle = () => {
-          if (!d.open) return;
+          if (!d.open || step.hintStyle === 'faq') return;
           const cur = state.hints[step.id] || 0;
           if (lvl > cur) { state.hints[step.id] = lvl; saveState(); }
           if (lvl === 3) toast('Level 3 used — noted, so the write-up stays honest');
@@ -300,6 +309,19 @@
       toast('Terraform check refreshed');
     };
     $('#exportBtn').onclick = exportNotes;
+
+    $('#viewReport').href = '/report?id=' + encodeURIComponent(LAB);
+
+    $('#pdfBtn').onclick = async e => {
+      const b = e.target, label = b.textContent;
+      b.textContent = 'Building PDF…'; b.disabled = true;
+      try {
+        const d = await api('/api/report');
+        if (d.error) toast(d.error);
+        else toast(`Saved ${d.rel} (${d.size_kb} KB)`);
+      } catch (err) { toast('PDF build failed'); }
+      b.textContent = label; b.disabled = false;
+    };
 
     // Highlight the section you're reading
     const obs = new IntersectionObserver(es => {

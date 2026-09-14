@@ -58,7 +58,8 @@
               "label": "What if I get stuck?",
               "text": "In order: read the error, since Terraform names the file, line, and usually the exact argument. Then check the docs page for that resource. Then open the Level 1 hint on the task. Then use the tutor button on the step, which can read your actual file and tell you what is wrong.\n\nAsking the tutor is not cheating. Opening Level 3 and copying the code without understanding it is the only thing that defeats the purpose."
             }
-          ]
+          ],
+          "hintStyle": "faq"
         },
         {
           "id": "0.1",
@@ -116,14 +117,19 @@
               "text": "Search <code>azurerm_resource_group</code> at <a href=\"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs\" target=\"_blank\">the registry</a> and open Example Usage. It needs three arguments and nothing more."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>location</code>, <code>tags</code>. Use string interpolation for the name so the prefix stays configurable."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>location</code>, <code>tags</code>. Use string interpolation for the name so the prefix stays configurable.",
+              "code": "resource \"azurerm_resource_group\" \"main\" {\n  name     = \n  location = \n  tags     = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_resource_group\" \"main\" {\n  name     = \"rg-${var.name_prefix}\"\n  location = var.location\n  tags     = var.tags\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/main.tf",
+            "marker": "# TODO 1.1"
+          }
         },
         {
           "id": "1.2",
@@ -146,14 +152,19 @@
               "text": "Search <code>azurerm_log_analytics_workspace</code>. The SKU you want is the pay-as-you-go one, and retention is measured in days."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>location</code>, <code>resource_group_name</code>, <code>sku</code>, <code>retention_in_days</code>, <code>tags</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>location</code>, <code>resource_group_name</code>, <code>sku</code>, <code>retention_in_days</code>, <code>tags</code>.",
+              "code": "resource \"azurerm_log_analytics_workspace\" \"main\" {\n  name                = \n  location            = \n  resource_group_name = \n\n  sku               = \n  retention_in_days = \n\n  tags = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_log_analytics_workspace\" \"main\" {\n  name                = \"law-${var.name_prefix}\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n\n  sku               = \"PerGB2018\"\n  retention_in_days = var.log_retention_days\n\n  tags = var.tags\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/main.tf",
+            "marker": "# TODO 1.2"
+          }
         },
         {
           "id": "1.C",
@@ -191,14 +202,19 @@
               "text": "Search <code>azurerm_user_assigned_identity</code>. It takes the same four basics as the resource group plus a location."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>location</code>, <code>resource_group_name</code>, <code>tags</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>location</code>, <code>resource_group_name</code>, <code>tags</code>.",
+              "code": "resource \"azurerm_user_assigned_identity\" \"cost_reader\" {\n  name                = \n  location            = \n  resource_group_name = \n  tags                = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_user_assigned_identity\" \"cost_reader\" {\n  name                = \"id-${var.name_prefix}-reader\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n  tags                = var.tags\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/main.tf",
+            "marker": "# TODO 1.3"
+          }
         },
         {
           "id": "1.4",
@@ -218,14 +234,19 @@
               "text": "Search <code>azurerm_role_assignment</code>. Three arguments: where the permission applies, which permission, and who gets it. Think about which of the identity's two IDs represents <em>who it is</em>."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>scope</code>, <code>role_definition_name</code>, <code>principal_id</code>. The scope is the subscription data source's <code>.id</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>scope</code>, <code>role_definition_name</code>, <code>principal_id</code>. The scope is the subscription data source's <code>.id</code>.",
+              "code": "resource \"azurerm_role_assignment\" \"cost_reader\" {\n  scope                = \n  role_definition_name = \n  principal_id         = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_role_assignment\" \"cost_reader\" {\n  scope                = data.azurerm_subscription.current.id\n  role_definition_name = \"Cost Management Reader\"\n  principal_id         = azurerm_user_assigned_identity.cost_reader.principal_id\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/main.tf",
+            "marker": "# TODO 1.4"
+          }
         }
       ]
     },
@@ -255,14 +276,19 @@
               "text": "Search <code>azurerm_storage_account</code>. The security arguments are near the top of the docs page; data protection lives inside a nested <code>blob_properties</code> block. One argument name changed in provider v4 \u2014 if you use the v3 name you'll get a clear error, so read it."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>https_traffic_only_enabled</code>, <code>min_tls_version</code>, <code>allow_nested_items_to_be_public</code>. Inside <code>blob_properties</code>: <code>versioning_enabled</code>, <code>delete_retention_policy</code>, <code>container_delete_retention_policy</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>https_traffic_only_enabled</code>, <code>min_tls_version</code>, <code>allow_nested_items_to_be_public</code>. Inside <code>blob_properties</code>: <code>versioning_enabled</code>, <code>delete_retention_policy</code>, <code>container_delete_retention_policy</code>.",
+              "code": "resource \"azurerm_storage_account\" \"exports\" {\n  name                = \n  location            = \n  resource_group_name = \n\n  account_tier             = \n  account_replication_type = \n  account_kind             = \n\n  https_traffic_only_enabled      = \n  min_tls_version                 = \n  allow_nested_items_to_be_public = \n\n  blob_properties {\n    versioning_enabled = \n\n    delete_retention_policy {\n      days = \n    }\n\n    container_delete_retention_policy {\n      days = \n    }\n  }\n\n  tags = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_storage_account\" \"exports\" {\n  name                = \"st${var.name_prefix}${random_string.suffix.result}\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n\n  account_tier             = \"Standard\"\n  account_replication_type = \"LRS\"\n  account_kind             = \"StorageV2\"\n\n  https_traffic_only_enabled      = true\n  min_tls_version                 = \"TLS1_2\"\n  allow_nested_items_to_be_public = false\n\n  blob_properties {\n    versioning_enabled = true\n\n    delete_retention_policy {\n      days = 7\n    }\n\n    container_delete_retention_policy {\n      days = 7\n    }\n  }\n\n  tags = var.tags\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/main.tf",
+            "marker": "# TODO 1.5"
+          }
         },
         {
           "id": "1.6",
@@ -281,14 +307,19 @@
               "text": "Search <code>azurerm_storage_container</code>. In provider v4 it takes the account by ID, not by name \u2014 that changed from v3."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>storage_account_id</code>, <code>container_access_type</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>storage_account_id</code>, <code>container_access_type</code>.",
+              "code": "resource \"azurerm_storage_container\" \"exports\" {\n  name                  = \n  storage_account_id    = \n  container_access_type = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_storage_container\" \"exports\" {\n  name                  = \"cost-exports\"\n  storage_account_id    = azurerm_storage_account.exports.id\n  container_access_type = \"private\"\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/main.tf",
+            "marker": "# TODO 1.6"
+          }
         },
         {
           "id": "1.7",
@@ -309,14 +340,19 @@
               "text": "Search <code>azurerm_monitor_diagnostic_setting</code>. Log categories are repeated blocks, one per category."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>target_resource_id</code>, <code>log_analytics_workspace_id</code>, three <code>enabled_log</code> blocks, one <code>enabled_metric</code> block."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>target_resource_id</code>, <code>log_analytics_workspace_id</code>, three <code>enabled_log</code> blocks, one <code>enabled_metric</code> block.",
+              "code": "resource \"azurerm_monitor_diagnostic_setting\" \"storage_blob\" {\n  name                       = \n  target_resource_id         = \n  log_analytics_workspace_id = \n\n  enabled_log {\n    category = \n  }\n\n  enabled_log {\n    category = \n  }\n\n  enabled_log {\n    category = \n  }\n\n  enabled_metric {\n    category = \n  }\n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_monitor_diagnostic_setting\" \"storage_blob\" {\n  name                       = \"diag-blob\"\n  target_resource_id         = \"${azurerm_storage_account.exports.id}/blobServices/default\"\n  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id\n\n  enabled_log {\n    category = \"StorageRead\"\n  }\n\n  enabled_log {\n    category = \"StorageWrite\"\n  }\n\n  enabled_log {\n    category = \"StorageDelete\"\n  }\n\n  enabled_metric {\n    category = \"Transaction\"\n  }\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/main.tf",
+            "marker": "# TODO 1.7"
+          }
         }
       ]
     },
@@ -342,14 +378,19 @@
               "text": "Search <code>azurerm_monitor_action_group</code>, then look up <a href=\"https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks\" target=\"_blank\">dynamic blocks</a>. Inside a dynamic block named <code>email_receiver</code>, the iterator is also called <code>email_receiver</code>, with <code>.key</code> and <code>.value</code>."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>resource_group_name</code>, <code>short_name</code>, <code>tags</code>, plus a <code>dynamic \"email_receiver\"</code> with <code>for_each = var.alert_emails</code> and a <code>content</code> block setting <code>name</code>, <code>email_address</code>, <code>use_common_alert_schema</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>resource_group_name</code>, <code>short_name</code>, <code>tags</code>, plus a <code>dynamic \"email_receiver\"</code> with <code>for_each = var.alert_emails</code> and a <code>content</code> block setting <code>name</code>, <code>email_address</code>, <code>use_common_alert_schema</code>.",
+              "code": "resource \"azurerm_monitor_action_group\" \"cost\" {\n  name                = \n  resource_group_name = \n  short_name          = \n\n  dynamic \"email_receiver\" {\n    for_each = \n\n    content {\n      name                    = \n      email_address           = \n      use_common_alert_schema = \n    }\n  }\n\n  tags = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_monitor_action_group\" \"cost\" {\n  name                = \"ag-${var.name_prefix}\"\n  resource_group_name = azurerm_resource_group.main.name\n  short_name          = \"costalert\"\n\n  dynamic \"email_receiver\" {\n    for_each = var.alert_emails\n\n    content {\n      name                    = \"email-${email_receiver.key}\"\n      email_address           = email_receiver.value\n      use_common_alert_schema = true\n    }\n  }\n\n  tags = var.tags\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/monitoring.tf",
+            "marker": "# TODO 2.1"
+          }
         },
         {
           "id": "2.2",
@@ -367,14 +408,19 @@
               "text": "Search \"cost anomaly\" at the registry. This one emails directly rather than going through an action group."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>display_name</code>, <code>subscription_id</code>, <code>email_subject</code>, <code>email_addresses</code>, <code>message</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>display_name</code>, <code>subscription_id</code>, <code>email_subject</code>, <code>email_addresses</code>, <code>message</code>.",
+              "code": "resource \"azurerm_cost_anomaly_alert\" \"main\" {\n  name            = \n  display_name    = \n  subscription_id = \n  email_subject   = \n  email_addresses = \n  message         = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_cost_anomaly_alert\" \"main\" {\n  name            = \"anomaly-${var.name_prefix}\"\n  display_name    = \"Daily cost anomaly\"\n  subscription_id = data.azurerm_subscription.current.id\n  email_subject   = \"Azure cost anomaly detected\"\n  email_addresses = var.alert_emails\n  message         = \"Daily spend deviated from the learned pattern. Check Cost Analysis for the responsible resource.\"\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/monitoring.tf",
+            "marker": "# TODO 2.2"
+          }
         }
       ]
     },
@@ -431,14 +477,19 @@
               "text": "Search <code>azurerm_consumption_budget_subscription</code>. Notifications are repeated blocks \u2014 four of them. The operator is the same for all four."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "Each block: <code>enabled</code>, <code>threshold</code>, <code>operator = \"GreaterThanOrEqualTo\"</code>, <code>threshold_type</code>, <code>contact_emails = var.alert_emails</code>, <code>contact_groups = [azurerm_monitor_action_group.cost.id]</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "Each block: <code>enabled</code>, <code>threshold</code>, <code>operator = \"GreaterThanOrEqualTo\"</code>, <code>threshold_type</code>, <code>contact_emails = var.alert_emails</code>, <code>contact_groups = [azurerm_monitor_action_group.cost.id]</code>.",
+              "code": "resource \"azurerm_consumption_budget_subscription\" \"main\" {\n  name            = \n  subscription_id = \n\n  amount     = \n  time_grain = \n\n  time_period {\n    start_date = \n    end_date   = \n  }\n\n  notification {\n    enabled        = \n    threshold      = \n    operator       = \n    threshold_type = \n    contact_emails = \n    contact_groups = \n  }\n\n  notification {\n    enabled        = \n    threshold      = \n    operator       = \n    threshold_type = \n    contact_emails = \n    contact_groups = \n  }\n\n  notification {\n    enabled        = \n    threshold      = \n    operator       = \n    threshold_type = \n    contact_emails = \n    contact_groups = \n  }\n\n  notification {\n    enabled        = \n    threshold      = \n    operator       = \n    threshold_type = \n    contact_emails = \n    contact_groups = \n  }\n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_consumption_budget_subscription\" \"main\" {\n  name            = \"budget-${var.name_prefix}\"\n  subscription_id = data.azurerm_subscription.current.id\n\n  amount     = var.monthly_budget\n  time_grain = \"Monthly\"\n\n  time_period {\n    start_date = var.budget_start_date\n    end_date   = var.budget_end_date\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 50.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Actual\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 80.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Actual\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 100.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Actual\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n\n  notification {\n    enabled        = true\n    threshold      = 100.0\n    operator       = \"GreaterThanOrEqualTo\"\n    threshold_type = \"Forecasted\"\n    contact_emails = var.alert_emails\n    contact_groups = [azurerm_monitor_action_group.cost.id]\n  }\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/budget.tf",
+            "marker": "# TODO 3.1"
+          }
         }
       ]
     },
@@ -465,14 +516,19 @@
               "text": "Search <code>azurerm_subscription_cost_management_export</code>. Two nested blocks: where it writes, and what it writes. ActualCost is what was billed; AmortizedCost spreads reservation purchases over time."
             },
             {
-              "label": "Which arguments exactly?",
-              "text": "<code>name</code>, <code>subscription_id</code>, <code>recurrence_type</code>, <code>recurrence_period_start_date</code>, <code>recurrence_period_end_date</code>, plus the two nested blocks and <code>depends_on</code>."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>name</code>, <code>subscription_id</code>, <code>recurrence_type</code>, <code>recurrence_period_start_date</code>, <code>recurrence_period_end_date</code>, plus the two nested blocks and <code>depends_on</code>.",
+              "code": "resource \"azurerm_subscription_cost_management_export\" \"daily\" {\n  name                         = \n  subscription_id              = \n  recurrence_type              = \n  recurrence_period_start_date = \n  recurrence_period_end_date   = \n\n  export_data_storage_location {\n    container_id     = \n    root_folder_path = \n  }\n\n  export_data_options {\n    type = \n\n    time_frame = \n  }\n\n  depends_on = \n}"
             },
             {
               "label": "Show me the code",
               "code": "resource \"azurerm_subscription_cost_management_export\" \"daily\" {\n  name                         = \"export-${var.name_prefix}-daily\"\n  subscription_id              = data.azurerm_subscription.current.id\n  recurrence_type              = \"Daily\"\n  recurrence_period_start_date = var.budget_start_date\n  recurrence_period_end_date   = var.budget_end_date\n\n  export_data_storage_location {\n    container_id     = azurerm_storage_container.exports.id\n    root_folder_path = \"daily\"\n  }\n\n  export_data_options {\n    type = \"ActualCost\"\n\n    time_frame = \"MonthToDate\"\n  }\n\n  depends_on = [azurerm_role_assignment.cost_reader]\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/export.tf",
+            "marker": "# TODO 4.1"
+          }
         },
         {
           "id": "5.1",
@@ -490,14 +546,19 @@
               "text": "An output block is <code>output \"name\" { value = ...  description = \"...\" }</code>. Reference resources the same way you did inside them."
             },
             {
-              "label": "Which outputs exactly?",
-              "text": "<code>resource_group</code>, <code>storage_account</code>, <code>budget_name</code>, <code>cost_reader_client_id</code>, and optionally the monthly budget amount."
+              "label": "Show me the shape (values blank)",
+              "text": "<code>resource_group</code>, <code>storage_account</code>, <code>budget_name</code>, <code>cost_reader_client_id</code>, and optionally the monthly budget amount.",
+              "code": "output \"resource_group\" {\n  description = \n  value       = \n}\n\noutput \"storage_account\" {\n  description = \n  value       = \n}\n\noutput \"workbook_url\" {\n  description = \n  value       = \n}\n\noutput \"budget_name\" {\n  description = \n  value       = \n}\n\noutput \"cost_reader_client_id\" {\n  description = \n  value       = \n}\n\noutput \"monthly_budget_usd\" {\n  description = \n  value       = \n}"
             },
             {
               "label": "Show me the code",
               "code": "output \"resource_group\" {\n  description = \"Resource group holding everything in this project.\"\n  value       = azurerm_resource_group.main.name\n}\n\noutput \"storage_account\" {\n  description = \"Storage account receiving the daily cost export.\"\n  value       = azurerm_storage_account.exports.name\n}\n\noutput \"workbook_url\" {\n  description = \"Direct link to the cost dashboard in the Azure portal.\"\n  value       = \"https://portal.azure.com/#@/resource${azurerm_application_insights_workbook.cost.id}/workbook\"\n}\n\noutput \"budget_name\" {\n  description = \"Name of the subscription budget.\"\n  value       = azurerm_consumption_budget_subscription.main.name\n}\n\noutput \"cost_reader_client_id\" {\n  description = \"Client ID of the least-privilege identity used to read cost data.\"\n  value       = azurerm_user_assigned_identity.cost_reader.client_id\n}\n\noutput \"monthly_budget_usd\" {\n  description = \"Budget the alert thresholds are calculated against.\"\n  value       = var.monthly_budget\n}"
             }
-          ]
+          ],
+          "where": {
+            "file": "terraform/outputs.tf",
+            "marker": "# TODO 5.1"
+          }
         },
         {
           "id": "5.C",
