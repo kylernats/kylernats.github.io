@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cost Visibility Dashboard — Kyler Nats</title>
+<meta name="description" content="Azure cost governance built with Terraform: forecast-based budget alerts, anomaly detection, least-privilege access to billing data, and a hardened daily cost export.">
+<link rel="canonical" href="https://kylernats.github.io/work/cloud-security/cost-visibility-dashboard/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cost Visibility Dashboard — Kyler Nats">
+<meta property="og:description" content="Azure cost governance built with Terraform: forecast-based budget alerts, anomaly detection, least-privilege access to billing data, and a hardened daily cost export.">
+<meta property="og:url" content="https://kylernats.github.io/work/cloud-security/cost-visibility-dashboard/">
+<meta property="og:image" content="https://kylernats.github.io/assets/img/headshot.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B0D10'/><text y='68' x='50' text-anchor='middle' font-size='52' font-family='monospace' font-weight='bold' fill='%232DD4BF'>KN</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="/">
+      <span class="brand__mark">KN</span>
+      <span>Kyler Nats</span>
+    </a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Toggle navigation">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <nav class="nav" id="primary-nav" data-open="false">
+      <a href="/work/" data-section="work">Work</a>
+      <a href="/writing/" data-section="writing">Writing</a>
+      <a href="/about/" data-section="about">About</a>
+      <a href="/resume/" data-section="resume">Resume</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a> <span>/</span> <a href="/work/">Work</a> <span>/</span>
+        <a href="/work/cloud-security/">Cloud Security</a> <span>/</span>
+        <span>Cost Visibility Dashboard</span>
+      </nav>
+      <span class="eyebrow" style="display:block;margin-top:16px">Project 01 · Azure</span>
+      <h1>Cost Visibility Dashboard</h1>
+      <p class="lede">Cloud cost governance built as infrastructure-as-code: alerts that warn
+      you before the money is gone, not after.</p>
+      <div class="tag-row" style="margin-top:20px">
+        <span class="badge badge--building">In progress</span>
+        <span class="tag tag--dot" style="--dot:var(--d-cloud)">Azure</span>
+        <span class="tag">Terraform</span>
+        <span class="tag">Cost Management</span>
+        <span class="tag">RBAC</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="callout" style="margin-bottom:40px">
+        <div><strong>Status: building.</strong> The architecture, the Terraform, and the security
+        decisions below are real and written down. Nothing is deployed yet, so there are no
+        dashboard screenshots — only the baseline evidence captured before any resource existed.
+        This page gets updated as the build progresses rather than published all at once.</div>
+      </div>
+      <div class="prose">
+        <h2 style="margin-top:0">The problem</h2>
+        <p>A business moves to the cloud on a $5,000/month estimate. The first bill is $8,000.
+        Nobody notices, because nobody is watching a number that only appears once a month.
+        Three months later it is $30,000 and the money is already spent.</p>
+        <p>Nothing failed. Nobody was breached. The bill grew where nobody was looking.</p>
+        <p>Most people respond by setting a budget alert at 100% and stopping there. That alert
+        tells you the money is already gone. This project is about the one that arrives early
+        enough to matter.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Architecture</span><h2 style="margin-top:8px">What gets built</h2>
+        <p>Fourteen resources, all defined in Terraform so the environment can be rebuilt from
+        source and destroyed the moment the evidence is captured.</p></div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Component</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>consumption_budget_subscription</code></td><td>Four thresholds: 50/80/100% actual, plus <strong>100% forecasted</strong></td></tr>
+            <tr><td><code>cost_anomaly_alert</code></td><td>Flags daily spend deviating from the learned pattern</td></tr>
+            <tr><td><code>monitor_action_group</code></td><td>Alert delivery, swappable for SMS or a ticket queue later</td></tr>
+            <tr><td><code>subscription_cost_management_export</code></td><td>Daily CSV of actual usage to blob storage</td></tr>
+            <tr><td><code>storage_account</code></td><td>TLS 1.2 floor, no public access, versioning, 7-day soft delete</td></tr>
+            <tr><td><code>user_assigned_identity</code> + role</td><td>Scoped to <code>Cost Management Reader</code> and nothing else</td></tr>
+            <tr><td><code>monitor_diagnostic_setting</code></td><td>Logs who <em>read</em> the billing data, not just what it said</td></tr>
+            <tr><td><code>application_insights_workbook</code></td><td>The dashboard</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Decisions</span><h2 style="margin-top:8px">The choices that matter</h2>
+        <p>Each of these is a question an interviewer would ask, so the reasoning is written
+        down as it was made rather than reconstructed afterward.</p></div>
+      </div>
+
+      <div class="card-grid card-grid--2">
+        <article class="card card--static">
+          <div class="card__title">Forecasted alerts, not just actual</div>
+          <p class="card__desc">Three actual thresholds tell you what already happened. The
+          forecast alert fires when the month is <em>projected</em> to exceed budget. It is the
+          only one of the four that arrives while there is still time to act — and the one that
+          would have caught the $5K estimate becoming $30K.</p>
+        </article>
+
+        <article class="card card--static">
+          <div class="card__title">Cost Management Reader, not Contributor</div>
+          <p class="card__desc">The identity that reads billing data holds exactly one role. If
+          it were compromised, the blast radius is disclosure of a bill — not the ability to
+          create, modify, or delete anything. Reader would also work, but grants visibility into
+          every resource's configuration, which is more than the job needs.</p>
+        </article>
+
+        <article class="card card--static">
+          <div class="card__title">Anomaly detection alongside the budget</div>
+          <p class="card__desc">A monthly budget is blunt. If something starts burning money on
+          the 3rd, the budget stays silent until the running total crosses a threshold — possibly
+          two weeks and thousands of dollars later. Anomaly detection watches the daily shape
+          instead of the monthly total.</p>
+        </article>
+
+        <article class="card card--static">
+          <div class="card__title">LRS, not geo-redundant storage</div>
+          <p class="card__desc">The export is a daily regenerating copy of data Azure also holds.
+          Losing a region's copy means re-running an export, not losing anything irreplaceable.
+          Paying for geo-redundancy here would be spending money to protect against a scenario
+          with no real consequence — which is the exact failure this project exists to catch.</p>
+        </article>
+      </div>
+
+      <div class="callout" style="margin-top:20px">
+        <div><strong>A gap I could not close.</strong> The storage account keeps public network
+        access enabled. The Cost Management export service writes from Azure's side and cannot
+        reach a fully locked-down account without private endpoints, which are not in the free
+        tier. It is protected by a TLS 1.2 floor, no public blob access, and private container
+        ACLs — but the correct fix is a private endpoint, and this is not that. Documented here
+        rather than papered over.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Method</span><h2 style="margin-top:8px">How it gets built and torn down</h2></div>
+      </div>
+      <div class="card-grid">
+        <article class="card card--static">
+          <span class="project-card__index">Loop 1</span>
+          <div class="card__title">Local, free</div>
+          <p class="card__desc">Azurite, Azure Functions Core Tools, and SQL Server in Docker.
+          Iterate and break things at zero cost.</p>
+        </article>
+        <article class="card card--static">
+          <span class="project-card__index">Loop 2</span>
+          <div class="card__title">Real deploy</div>
+          <p class="card__desc"><code>terraform apply</code> on free tier, exercise it, then
+          capture screenshots, logs, the cost report, and Defender for Cloud findings.</p>
+        </article>
+        <article class="card card--static">
+          <span class="project-card__index">Loop 3</span>
+          <div class="card__title">Destroy</div>
+          <p class="card__desc"><code>terraform destroy</code>, confirm nothing is still billing,
+          then write up what happened including what failed first time.</p>
+        </article>
+      </div>
+
+      <div class="callout" style="margin-top:20px">
+        <div><strong>Why the local emulator is not enough on its own.</strong> Azurite does not
+        support blob versioning, soft delete, lifecycle policy, or immutability. There is no
+        emulator at all for Cost Management, Azure Monitor, managed identity, RBAC, or Defender
+        for Cloud. Local development is for iteration speed; anything involving security or cost
+        has to run in a real subscription or the claim is not honest.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Evidence</span><h2 style="margin-top:8px">Baseline, before anything existed</h2>
+        <p>Captured first because they cannot be retaken. Subscription ID, account email, and
+        tenant domain are blurred — there is no upside to publishing them.</p></div>
+      </div>
+
+      <div class="card-grid card-grid--2">
+        <figure class="card card--static" style="padding:14px">
+          <img src="/projects/01-cost-visibility/docs/evidence/screenshots/00-baseline-empty-rg.png" alt="Azure resource groups list showing only NetworkWatcherRG"
+               loading="lazy" style="border-radius:8px;border:1px solid var(--border)">
+          <figcaption class="card__desc" style="margin-top:12px">Resource groups before the lab.
+          Only the auto-created <code>NetworkWatcherRG</code>, &ldquo;Showing 1 - 1 of 1&rdquo;.
+          Proof nothing was pre-built.</figcaption>
+        </figure>
+
+        <figure class="card card--static" style="padding:14px">
+          <img src="/projects/01-cost-visibility/docs/evidence/screenshots/01-baseline-credit.png" alt="Azure subscription overview showing Owner role and zero cost"
+               loading="lazy" style="border-radius:8px;border:1px solid var(--border)">
+          <figcaption class="card__desc" style="margin-top:12px">Owner role, current cost
+          <code>0.00</code>, and the $200 free trial credit intact.</figcaption>
+        </figure>
+
+        <figure class="card card--static" style="padding:14px;grid-column:1/-1">
+          <img src="/projects/01-cost-visibility/docs/evidence/screenshots/02-baseline-cost-analysis.png" alt="Azure cost analysis showing no cost, no budget and no forecast"
+               loading="lazy" style="border-radius:8px;border:1px solid var(--border)">
+          <figcaption class="card__desc" style="margin-top:12px">The useful one.
+          <code>BUDGET: NONE</code> and <code>FORECAST UNAVAILABLE</code>. Once the budget is
+          deployed those same two tiles read $25 and a live forecast, so the before and after sit
+          in a single frame.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Notes</span><h2 style="margin-top:8px">What I have run into so far</h2></div>
+      </div>
+      <div class="prose">
+        <h3>The tenant blocked my first login</h3>
+        <p>Authenticating the Azure CLI with device code failed:</p>
+        <pre><code>AADSTS530035: Access has been blocked by security defaults.</code></pre>
+        <p>Entra ID security defaults block the device code flow. That is deliberate — device
+        code is a known phishing vector, because an attacker can generate a code and talk a
+        target into entering it on their own machine. The browser-based flow ties authentication
+        to the session that started it, so it is allowed.</p>
+        <p>The tempting fix was to disable security defaults. That would have traded a real
+        protection for convenience on the subscription holding my billing data. Used the browser
+        flow instead.</p>
+
+        <h3>Two deprecations caught before they became a problem</h3>
+        <p><code>resource_manager_id</code> on storage containers and the <code>metric</code>
+        block on diagnostic settings are both deprecated in the azurerm provider, and
+        <code>metric</code> disappears entirely in v5. Fixed at write time rather than inheriting
+        a break at the next upgrade.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Next</span><h2 style="margin-top:8px">What is left</h2></div>
+      </div>
+      <div class="prose">
+        <ul>
+          <li>Finish the Terraform, deploy, and capture the working dashboard</li>
+          <li>Test that the least-privilege identity is actually <em>denied</em> when it attempts
+          a write — configuring a control is not evidence that it works</li>
+          <li>Verify the alert path end to end, from Terraform through to an email in an inbox</li>
+          <li>Confirm the daily cost export lands and contains real usage rows</li>
+          <li>Tear it all down and publish the total cost of the exercise</li>
+        </ul>
+      </div>
+      <div class="btn-row" style="margin-top:24px">
+        <a class="btn btn--primary" href="https://github.com/kylernats/kylernats.github.io/tree/main/projects/01-cost-visibility" target="_blank" rel="noopener">Source on GitHub</a>
+        <a class="btn" href="/work/cloud-security/">All cloud security work</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="site-footer__grid">
+      <div>
+        <a class="brand" href="/"><span class="brand__mark">KN</span><span>Kyler Nats</span></a>
+        <p class="site-footer__tagline">Cybersecurity analyst working in cloud, detection, and AI.</p>
+      </div>
+      <div>
+        <h4>Work</h4>
+        <ul>
+          <li><a href="/work/cloud-security/">Cloud Security</a></li>
+          <li><a href="/work/detection-response/">Detection &amp; Response</a></li>
+          <li><a href="/work/ai-security/">AI Security</a></li>
+          <li><a href="/work/grc-risk/">GRC &amp; Risk</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Site</h4>
+        <ul>
+          <li><a href="/work/">All work</a></li>
+          <li><a href="/writing/">Writing</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="/resume/">Resume</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Elsewhere</h4>
+        <ul>
+          <li><a href="https://github.com/kylernats" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/kyler-nats/" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="mailto:kylernats@gmail.com">Email</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="site-footer__bottom">
+      <span>© <span data-year>2026</span> Kyler Nats</span>
+      <span class="mono">Built by hand · No framework · Hosted on GitHub Pages</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/main.js"></script>
+</body>
+</html>
