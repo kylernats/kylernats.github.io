@@ -1,1 +1,17 @@
-{}
+{
+  "1.1": {
+    "session": "ee860ab1-eea9-483b-a16a-ee0db2ddca5c",
+    "turns": [
+      {
+        "role": "user",
+        "text": "is 1.1 just creating a folder to store everything in?",
+        "ts": "2026-09-14 14:24"
+      },
+      {
+        "role": "assistant",
+        "text": "Close, but not quite \"just a folder.\" Two things worth separating:\n\n- **What it holds** \u2014 a resource group is a management container. It doesn't nest inside anything except the subscription, and it doesn't run anything itself.\n- **Why it matters here** \u2014 it's the blast radius for `terraform destroy`, and it's the unit you'd filter Cost Management by if you weren't using tags. The tags are the actual attribution mechanism; the resource group is just where the tagged things live.\n\nFor 1.1 you need three arguments: `name`, `location`, `tags`. Look at `azurerm_resource_group` in the provider docs \u2014 argument names for those three map almost exactly to what's already in `variables.tf` (`var.name_prefix`, `var.location`, `var.tags`), you're just building the `name` string with the `rg-` prefix.",
+        "ts": "2026-09-14 14:24"
+      }
+    ]
+  }
+}

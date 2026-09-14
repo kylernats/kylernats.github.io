@@ -11,6 +11,56 @@
       "blurb": "Evidence of the 'before'. These can never be retaken once resources exist.",
       "steps": [
         {
+          "id": "0.0",
+          "title": "How to read these tasks",
+          "notes": false,
+          "what": "Every Terraform task in this lab is the same shape. Learn it once here and the other eleven are the same job with different words.",
+          "why": "The point of this page is that you stop needing step-by-step direction. Once the pattern is in your head, a task like \"create a storage account with versioning\" is enough.",
+          "table": {
+            "head": [
+              "Part",
+              "What it means"
+            ],
+            "rows": [
+              [
+                "<code>resource</code>",
+                "The keyword. You are declaring a thing that should exist."
+              ],
+              [
+                "<code>\"azurerm_resource_group\"</code>",
+                "The <b>type</b>. Comes from the provider. Never invented \u2014 always looked up."
+              ],
+              [
+                "<code>\"main\"</code>",
+                "The <b>local name</b>. Yours to pick. Only used to reference it elsewhere in your own code."
+              ],
+              [
+                "<code>{ ... }</code>",
+                "The <b>arguments</b>. Which ones exist, and which are required, is in the docs for that type."
+              ]
+            ]
+          },
+          "callout": "<strong>Where everything lives.</strong> All Terraform for this lab goes in <code>projects/01-cost-visibility/terraform/</code>. One file per concern: <code>main.tf</code> (foundation, identity, storage), <code>monitoring.tf</code> (alerts), <code>budget.tf</code>, <code>export.tf</code>, <code>outputs.tf</code>. Terraform reads every <code>.tf</code> file in the folder and treats them as one config, so the split is purely for humans. Write each task where its TODO marker already sits.",
+          "hints": [
+            {
+              "label": "How do I find the arguments?",
+              "text": "Go to <a href=\"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs\" target=\"_blank\">the azurerm provider docs</a>. Use the search box on the left. Type the resource type, for example <code>resource_group</code>. Open it. Two sections matter: <b>Example Usage</b>, which is copyable shape, and <b>Argument Reference</b>, which tells you what is Required versus Optional. Required arguments are the only ones you strictly need; the rest are choices you are making on purpose."
+            },
+            {
+              "label": "How do I point one resource at another?",
+              "text": "Use <code>type.local_name.attribute</code>. So the resource group you declare as <code>resource \"azurerm_resource_group\" \"main\"</code> is referenced elsewhere as <code>azurerm_resource_group.main.name</code> or <code>.location</code> or <code>.id</code>.\n\nThis matters for more than typing. Referencing is how Terraform learns the order to build things in. If you hardcode the string <code>\"rg-costvis\"</code> instead, Terraform has no idea the two are related and may try to build them in the wrong order.\n\nWhich attributes exist is listed under <b>Attributes Reference</b> on each docs page."
+            },
+            {
+              "label": "What is the loop?",
+              "text": "Write a block, then run <code>./scripts/check.sh</code>. It shows remaining TODOs, runs <code>terraform fmt</code>, and runs <code>terraform validate</code>. Nothing touches Azure and nothing costs money, so run it as often as you like.\n\nValidate catches wrong argument names, missing required arguments, and type errors. It does not catch a value that is legal but wrong, which is what the requirement checks at the end are for.\n\nExpect validation to fail until the last task is done, because <code>workbook.tf</code> references resources you have not written yet. That is normal."
+            },
+            {
+              "label": "What if I get stuck?",
+              "text": "In order: read the error, since Terraform names the file, line, and usually the exact argument. Then check the docs page for that resource. Then open the Level 1 hint on the task. Then use the tutor button on the step, which can read your actual file and tell you what is wrong.\n\nAsking the tutor is not cheating. Opening Level 3 and copying the code without understanding it is the only thing that defeats the purpose."
+            }
+          ]
+        },
+        {
           "id": "0.1",
           "title": "Capture the empty state",
           "notes": true,
