@@ -232,3 +232,20 @@ tr:last-child td{border-bottom:none}
 .where code{background:var(--surface-hi);color:var(--accent-hi)}
 .lvlq{color:var(--faint);border-color:var(--border-hi);background:transparent;
   min-width:20px;text-align:center}
+
+/* line-by-line explanation */
+.ann{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin:16px 0;
+  background:var(--bg-subtle)}
+.ann summary{cursor:pointer;padding:10px 14px;font:550 13px var(--sans);color:var(--text);
+  list-style:none;display:flex;align-items:center;gap:8px;background:var(--surface-hi)}
+.ann summary::-webkit-details-marker{display:none}
+.ann summary::before{content:"\25BE";color:var(--accent);font-size:11px;transition:transform .15s}
+.ann:not([open]) summary::before{transform:rotate(-90deg)}
+.ann-body{padding:4px 0 10px}
+.ann-row{padding:0 14px}
+.ann-row + .ann-row{margin-top:2px}
+.ann-code{background:none;border:none;border-radius:0;padding:5px 0 0;margin:0;
+  font:12.5px/1.5 var(--mono);color:var(--accent-hi);white-space:pre-wrap;word-break:break-word}
+.ann-note{font-size:13px;line-height:1.6;color:var(--muted);margin:3px 0 9px 0;
+  padding-left:12px;border-left:2px solid var(--border-hi)}
+.ann-note code{font-size:12px;background:var(--surface-hi)}

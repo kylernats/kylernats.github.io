@@ -129,7 +129,29 @@
           "where": {
             "file": "terraform/main.tf",
             "marker": "# TODO 1.1"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_resource_group\" \"main\" {",
+              "note": "Start of the block. `azurerm_resource_group` is the kind of thing being made. `\"main\"` is my own nickname for it, used when other code needs to point at this one. Azure never sees the nickname."
+            },
+            {
+              "code": "  name     = \"rg-${var.name_prefix}\"",
+              "note": "The name Azure actually shows. `${...}` drops a variable into the string. `var.name_prefix` is `costvis`, so this comes out as `rg-costvis`."
+            },
+            {
+              "code": "  location = var.location",
+              "note": "Which Azure region it lives in. Comes from a variable so I change it in one place instead of nine."
+            },
+            {
+              "code": "  tags     = var.tags",
+              "note": "Labels stuck on the resource. These are what let me answer \"what did this project cost\" later. Untagged resources are invisible in a cost breakdown."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "1.2",
@@ -164,7 +186,49 @@
           "where": {
             "file": "terraform/main.tf",
             "marker": "# TODO 1.2"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_log_analytics_workspace\" \"main\" {",
+              "note": "Creates the place logs get sent. Without something like this, logs are generated and thrown away."
+            },
+            {
+              "code": "  name                = \"law-${var.name_prefix}\"",
+              "note": "Becomes `law-costvis`. Same variable trick as before."
+            },
+            {
+              "code": "  location            = azurerm_resource_group.main.location",
+              "note": "Reuses the resource group's region instead of me typing the region again. Pointing at another resource also tells Terraform to build that one first."
+            },
+            {
+              "code": "  resource_group_name = azurerm_resource_group.main.name",
+              "note": "Puts this workspace inside the folder from 1.1."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  sku               = \"PerGB2018\"",
+              "note": "The pricing plan. `PerGB2018` means pay per gigabyte of logs taken in. The first 5 GB each month is free, and this lab uses a tiny fraction of that."
+            },
+            {
+              "code": "  retention_in_days = var.log_retention_days",
+              "note": "How many days logs are kept before Azure deletes them. Longer retention costs more, so 30 days is a deliberate choice, not a default."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  tags = var.tags",
+              "note": "Same labels as everything else in the project."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "1.C",
@@ -214,7 +278,33 @@
           "where": {
             "file": "terraform/main.tf",
             "marker": "# TODO 1.3"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_user_assigned_identity\" \"cost_reader\" {",
+              "note": "Creates a login for software rather than a person. Nothing about it has a password, which means there is no password to accidentally commit to GitHub."
+            },
+            {
+              "code": "  name                = \"id-${var.name_prefix}-reader\"",
+              "note": "Becomes `id-costvis-reader`. The name says what it is allowed to do, which matters when you have forty of these."
+            },
+            {
+              "code": "  location            = azurerm_resource_group.main.location",
+              "note": "Region. Same one as everything else."
+            },
+            {
+              "code": "  resource_group_name = azurerm_resource_group.main.name",
+              "note": "Lives in the project folder."
+            },
+            {
+              "code": "  tags                = var.tags",
+              "note": "Project labels."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "1.4",
@@ -246,7 +336,29 @@
           "where": {
             "file": "terraform/main.tf",
             "marker": "# TODO 1.4"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_role_assignment\" \"cost_reader\" {",
+              "note": "This is the line that actually grants permission. Until this exists, the identity from 1.3 can do literally nothing."
+            },
+            {
+              "code": "  scope                = data.azurerm_subscription.current.id",
+              "note": "Where the permission applies. This is the whole subscription, because billing data lives at subscription level. A resource-group scope would not be able to read a bill at all."
+            },
+            {
+              "code": "  role_definition_name = \"Cost Management Reader\"",
+              "note": "Which permission. `Cost Management Reader` is a built-in Azure role that can read cost data and nothing else. Not Contributor, not Owner, not even Reader."
+            },
+            {
+              "code": "  principal_id         = azurerm_user_assigned_identity.cost_reader.principal_id",
+              "note": "Who gets it. `principal_id` is the identity's object ID, meaning *who it is*. The identity also has a `client_id`, which is how apps address it. Using `client_id` here fails with an error that does not mention `client_id` anywhere."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         }
       ]
     },
@@ -288,7 +400,117 @@
           "where": {
             "file": "terraform/main.tf",
             "marker": "# TODO 1.5"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_storage_account\" \"exports\" {",
+              "note": "Creates cloud file storage. The daily copies of the bill land here."
+            },
+            {
+              "code": "  name                = \"st${var.name_prefix}${random_string.suffix.result}\"",
+              "note": "Storage account names have to be unique across all of Azure, and allow only lowercase letters and numbers. That is why a random 6-character suffix gets glued on the end."
+            },
+            {
+              "code": "  location            = azurerm_resource_group.main.location",
+              "note": ""
+            },
+            {
+              "code": "  resource_group_name = azurerm_resource_group.main.name",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  account_tier             = \"Standard\"",
+              "note": "Standard is the cheap, disk-backed option. Premium is SSD and costs far more for no benefit here."
+            },
+            {
+              "code": "  account_replication_type = \"LRS\"",
+              "note": "LRS keeps three copies inside one datacenter. The alternatives copy across regions and cost more to protect data that regenerates daily anyway."
+            },
+            {
+              "code": "  account_kind             = \"StorageV2\"",
+              "note": "The current generation of storage account. There is no reason to pick an older one."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  https_traffic_only_enabled      = true",
+              "note": "Refuses plain HTTP. Anything connecting has to use encryption in transit."
+            },
+            {
+              "code": "  min_tls_version                 = \"TLS1_2\"",
+              "note": "Refuses old, breakable encryption. TLS 1.0 and 1.1 have known attacks against them."
+            },
+            {
+              "code": "  allow_nested_items_to_be_public = false",
+              "note": "This is the big one. It makes it impossible for anyone to flip a container to public. \"Misconfigured storage bucket\" breaches are this setting being wrong."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  blob_properties {",
+              "note": "Opens a sub-block. Everything inside applies to blobs rather than to the account itself."
+            },
+            {
+              "code": "    versioning_enabled = true",
+              "note": "Keeps the old copy whenever a file is overwritten. This is ransomware defence: ransomware encrypts by overwriting, and versioning means the originals are still sitting there."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "    delete_retention_policy {",
+              "note": "Opens the soft-delete settings for individual files."
+            },
+            {
+              "code": "      days = 7",
+              "note": "A deleted file is recoverable for 7 days instead of being gone instantly."
+            },
+            {
+              "code": "    }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "    container_delete_retention_policy {",
+              "note": "The same protection, but for someone deleting a whole container rather than one file."
+            },
+            {
+              "code": "      days = 7",
+              "note": ""
+            },
+            {
+              "code": "    }",
+              "note": ""
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  tags = var.tags",
+              "note": "Project labels."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "1.6",
@@ -319,7 +541,29 @@
           "where": {
             "file": "terraform/main.tf",
             "marker": "# TODO 1.6"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_storage_container\" \"exports\" {",
+              "note": "Creates a folder inside the storage account from 1.5."
+            },
+            {
+              "code": "  name                  = \"cost-exports\"",
+              "note": "The folder name. Azure Cost Management will write into this."
+            },
+            {
+              "code": "  storage_account_id    = azurerm_storage_account.exports.id",
+              "note": "Which account it belongs to. In provider version 4 this takes the account's ID; older examples online pass the account *name*, which no longer works."
+            },
+            {
+              "code": "  container_access_type = \"private\"",
+              "note": "`private` means nobody on the internet can read it without credentials. Older systems defaulted to public, which is exactly how those breach headlines happen."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "1.7",
@@ -352,7 +596,93 @@
           "where": {
             "file": "terraform/main.tf",
             "marker": "# TODO 1.7"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_monitor_diagnostic_setting\" \"storage_blob\" {",
+              "note": "Turns logging on for the storage account and points it at the workspace from 1.2."
+            },
+            {
+              "code": "  name                       = \"diag-blob\"",
+              "note": "Just a label for this logging rule."
+            },
+            {
+              "code": "  target_resource_id         = \"${azurerm_storage_account.exports.id}/blobServices/default\"",
+              "note": "What to collect logs from. Appending `/blobServices/default` targets the blob service specifically. Pointing at the bare account ID collects account-level events and misses the file reads, which are the interesting part."
+            },
+            {
+              "code": "  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id",
+              "note": "Where the logs are sent."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  enabled_log {",
+              "note": ""
+            },
+            {
+              "code": "    category = \"StorageRead\"",
+              "note": "Records every read. This is the one that answers \"who looked at the cost data\"."
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  enabled_log {",
+              "note": ""
+            },
+            {
+              "code": "    category = \"StorageWrite\"",
+              "note": "Records every write, so I can confirm the daily export actually ran."
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  enabled_log {",
+              "note": ""
+            },
+            {
+              "code": "    category = \"StorageDelete\"",
+              "note": "Records deletions. If something vanishes, there is a record of it."
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  enabled_metric {",
+              "note": "Numeric counters rather than individual events. Use `enabled_metric`, not `metric` \u2014 the old name is deprecated and disappears in provider version 5."
+            },
+            {
+              "code": "    category = \"Transaction\"",
+              "note": ""
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         }
       ]
     },
@@ -390,7 +720,77 @@
           "where": {
             "file": "terraform/monitoring.tf",
             "marker": "# TODO 2.1"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_monitor_action_group\" \"cost\" {",
+              "note": "The delivery mechanism. Alerts do not send themselves; they hand off to an action group, which emails, texts, or calls a webhook."
+            },
+            {
+              "code": "  name                = \"ag-${var.name_prefix}\"",
+              "note": "Becomes `ag-costvis`."
+            },
+            {
+              "code": "  resource_group_name = azurerm_resource_group.main.name",
+              "note": "Lives in the project folder."
+            },
+            {
+              "code": "  short_name          = \"costalert\"",
+              "note": "Maximum 12 characters. Azure uses it as the prefix on SMS messages, which is why it is capped so short."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  dynamic \"email_receiver\" {",
+              "note": "Generates one `email_receiver` block per item in a list. Writing a single hardcoded block would only ever handle one address."
+            },
+            {
+              "code": "    for_each = var.alert_emails",
+              "note": "The list being looped over. One receiver gets generated for each address in it."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "    content {",
+              "note": "What each generated block contains. This runs once per list item."
+            },
+            {
+              "code": "      name                    = \"email-${email_receiver.key}\"",
+              "note": "Each receiver needs a unique name, so the list index gets appended: `email-0`, `email-1`, and so on. `email_receiver.key` is that index."
+            },
+            {
+              "code": "      email_address           = email_receiver.value",
+              "note": "The actual address. `.value` is the current item from the list."
+            },
+            {
+              "code": "      use_common_alert_schema = true",
+              "note": "Sends alerts in Azure's standard payload format, so a webhook or ticket system can parse them without custom code per alert type."
+            },
+            {
+              "code": "    }",
+              "note": ""
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  tags = var.tags",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "2.2",
@@ -420,7 +820,41 @@
           "where": {
             "file": "terraform/monitoring.tf",
             "marker": "# TODO 2.2"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_cost_anomaly_alert\" \"main\" {",
+              "note": "Azure learns what your normal daily spend looks like and tells you when today does not match. A monthly budget cannot do this \u2014 it only sees the running total."
+            },
+            {
+              "code": "  name            = \"anomaly-${var.name_prefix}\"",
+              "note": "Internal name for the rule."
+            },
+            {
+              "code": "  display_name    = \"Daily cost anomaly\"",
+              "note": "What shows in the portal. Worth making readable."
+            },
+            {
+              "code": "  subscription_id = data.azurerm_subscription.current.id",
+              "note": "Which subscription to watch."
+            },
+            {
+              "code": "  email_subject   = \"Azure cost anomaly detected\"",
+              "note": "The subject line of the email you will get. Make it obvious at a glance."
+            },
+            {
+              "code": "  email_addresses = var.alert_emails",
+              "note": "Who receives it. This alert emails directly rather than going through the action group."
+            },
+            {
+              "code": "  message         = \"Daily spend deviated from the learned pattern. Check Cost Analysis for the responsible resource.\"",
+              "note": "Body text. Worth saying where to go look, because the alert itself does not tell you which resource caused it."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         }
       ]
     },
@@ -489,7 +923,201 @@
           "where": {
             "file": "terraform/budget.tf",
             "marker": "# TODO 3.1"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_consumption_budget_subscription\" \"main\" {",
+              "note": "The centrepiece. A spending limit that emails you as you approach it."
+            },
+            {
+              "code": "  name            = \"budget-${var.name_prefix}\"",
+              "note": "Becomes `budget-costvis`."
+            },
+            {
+              "code": "  subscription_id = data.azurerm_subscription.current.id",
+              "note": "This wants the full resource ID (`/subscriptions/...`), not the bare GUID. Passing the GUID gives a confusing scope error."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  amount     = var.monthly_budget",
+              "note": "The budget in dollars. Every threshold below is a percentage of this number."
+            },
+            {
+              "code": "  time_grain = \"Monthly\"",
+              "note": "Monthly means the counter resets on the 1st."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  time_period {",
+              "note": "When the budget is active. Start date has to be UTC midnight on the first of a month."
+            },
+            {
+              "code": "    start_date = var.budget_start_date",
+              "note": ""
+            },
+            {
+              "code": "    end_date   = var.budget_end_date",
+              "note": ""
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  notification {",
+              "note": ""
+            },
+            {
+              "code": "    enabled        = true",
+              "note": ""
+            },
+            {
+              "code": "    threshold      = 50.0",
+              "note": "Fires at 50% of the budget. Informational \u2014 just telling me the month is moving."
+            },
+            {
+              "code": "    operator       = \"GreaterThanOrEqualTo\"",
+              "note": "`GreaterThanOrEqualTo` means fire at or above the threshold, not exactly on it."
+            },
+            {
+              "code": "    threshold_type = \"Actual\"",
+              "note": "Based on money already spent. Backward-looking: by the time this fires, the money is gone."
+            },
+            {
+              "code": "    contact_emails = var.alert_emails",
+              "note": "Addresses emailed directly by the budget."
+            },
+            {
+              "code": "    contact_groups = [azurerm_monitor_action_group.cost.id]",
+              "note": "Also route through the action group from 2.1, so adding SMS later is one change instead of four."
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  notification {",
+              "note": ""
+            },
+            {
+              "code": "    enabled        = true",
+              "note": ""
+            },
+            {
+              "code": "    threshold      = 80.0",
+              "note": "Fires at 80%. This is the \"go look at what is running\" alert."
+            },
+            {
+              "code": "    operator       = \"GreaterThanOrEqualTo\"",
+              "note": ""
+            },
+            {
+              "code": "    threshold_type = \"Actual\"",
+              "note": ""
+            },
+            {
+              "code": "    contact_emails = var.alert_emails",
+              "note": ""
+            },
+            {
+              "code": "    contact_groups = [azurerm_monitor_action_group.cost.id]",
+              "note": ""
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  notification {",
+              "note": ""
+            },
+            {
+              "code": "    enabled        = true",
+              "note": ""
+            },
+            {
+              "code": "    threshold      = 100.0",
+              "note": ""
+            },
+            {
+              "code": "    operator       = \"GreaterThanOrEqualTo\"",
+              "note": ""
+            },
+            {
+              "code": "    threshold_type = \"Actual\"",
+              "note": ""
+            },
+            {
+              "code": "    contact_emails = var.alert_emails",
+              "note": ""
+            },
+            {
+              "code": "    contact_groups = [azurerm_monitor_action_group.cost.id]",
+              "note": ""
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  notification {",
+              "note": ""
+            },
+            {
+              "code": "    enabled        = true",
+              "note": ""
+            },
+            {
+              "code": "    threshold      = 100.0",
+              "note": ""
+            },
+            {
+              "code": "    operator       = \"GreaterThanOrEqualTo\"",
+              "note": ""
+            },
+            {
+              "code": "    threshold_type = \"Forecasted\"",
+              "note": "Based on where the month is *projected* to land. This is the one that arrives while there is still time to act, and the reason this project exists."
+            },
+            {
+              "code": "    contact_emails = var.alert_emails",
+              "note": ""
+            },
+            {
+              "code": "    contact_groups = [azurerm_monitor_action_group.cost.id]",
+              "note": ""
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         }
       ]
     },
@@ -528,7 +1156,89 @@
           "where": {
             "file": "terraform/export.tf",
             "marker": "# TODO 4.1"
-          }
+          },
+          "annotated": [
+            {
+              "code": "resource \"azurerm_subscription_cost_management_export\" \"daily\" {",
+              "note": "Tells Azure to write a CSV of real usage into storage on a schedule. Cost Analysis in the portal is fine for today; this is how you still have March's numbers in September."
+            },
+            {
+              "code": "  name                         = \"export-${var.name_prefix}-daily\"",
+              "note": "Name of the scheduled export."
+            },
+            {
+              "code": "  subscription_id              = data.azurerm_subscription.current.id",
+              "note": "Which subscription's costs to export."
+            },
+            {
+              "code": "  recurrence_type              = \"Daily\"",
+              "note": "Daily. Every day it writes a fresh file."
+            },
+            {
+              "code": "  recurrence_period_start_date = var.budget_start_date",
+              "note": "When the schedule starts running."
+            },
+            {
+              "code": "  recurrence_period_end_date   = var.budget_end_date",
+              "note": "When it stops. Has to be in the future or the export never runs."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  export_data_storage_location {",
+              "note": "Opens the block describing where the file goes."
+            },
+            {
+              "code": "    container_id     = azurerm_storage_container.exports.id",
+              "note": "The container from 1.6."
+            },
+            {
+              "code": "    root_folder_path = \"daily\"",
+              "note": "A subfolder inside that container, so the files are not loose at the root."
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  export_data_options {",
+              "note": "Opens the block describing what goes in the file."
+            },
+            {
+              "code": "    type = \"ActualCost\"",
+              "note": "What was actually billed. The alternative, `AmortizedCost`, spreads big upfront purchases across the months they cover. With no reservations in play they are identical, but ActualCost matches the invoice."
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "    time_frame = \"MonthToDate\"",
+              "note": "Each run rewrites the whole month so far, so the newest file is always the complete picture rather than one day in isolation."
+            },
+            {
+              "code": "  }",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "  depends_on = [azurerm_role_assignment.cost_reader]",
+              "note": "Forces Terraform to create the role assignment first. Terraform normally works out order by noticing which resources reference each other, but this export never mentions the role assignment, so it has no idea it has to wait. Without this line it can create an export that silently fails its first run."
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "5.1",
@@ -558,7 +1268,125 @@
           "where": {
             "file": "terraform/outputs.tf",
             "marker": "# TODO 5.1"
-          }
+          },
+          "annotated": [
+            {
+              "code": "output \"resource_group\" {",
+              "note": "Prints a value after `terraform apply` finishes. `\"resource_group\"` is the label it shows up under."
+            },
+            {
+              "code": "  description = \"Resource group holding everything in this project.\"",
+              "note": "A note for whoever reads this later, including me in six months. Terraform does not require it."
+            },
+            {
+              "code": "  value       = azurerm_resource_group.main.name",
+              "note": "What actually gets printed. Saves hunting through the portal for the name."
+            },
+            {
+              "code": "}",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "output \"storage_account\" {",
+              "note": "The storage account name, which is partly random, so this is the only convenient way to find it."
+            },
+            {
+              "code": "  description = \"Storage account receiving the daily cost export.\"",
+              "note": ""
+            },
+            {
+              "code": "  value       = azurerm_storage_account.exports.name",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "output \"workbook_url\" {",
+              "note": "Builds a direct portal link to the dashboard, so I do not have to navigate there by hand."
+            },
+            {
+              "code": "  description = \"Direct link to the cost dashboard in the Azure portal.\"",
+              "note": ""
+            },
+            {
+              "code": "  value       = \"https://portal.azure.com/#@/resource${azurerm_application_insights_workbook.cost.id}/workbook\"",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "output \"budget_name\" {",
+              "note": "Confirms the budget got created and under what name."
+            },
+            {
+              "code": "  description = \"Name of the subscription budget.\"",
+              "note": ""
+            },
+            {
+              "code": "  value       = azurerm_consumption_budget_subscription.main.name",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "output \"cost_reader_client_id\" {",
+              "note": "The identity's client ID, needed when testing that least privilege actually denies things in phase 9."
+            },
+            {
+              "code": "  description = \"Client ID of the least-privilege identity used to read cost data.\"",
+              "note": ""
+            },
+            {
+              "code": "  value       = azurerm_user_assigned_identity.cost_reader.client_id",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            },
+            {
+              "code": "",
+              "note": ""
+            },
+            {
+              "code": "output \"monthly_budget_usd\" {",
+              "note": "Echoes back the budget so the alert thresholds are not a mystery later."
+            },
+            {
+              "code": "  description = \"Budget the alert thresholds are calculated against.\"",
+              "note": ""
+            },
+            {
+              "code": "  value       = var.monthly_budget",
+              "note": ""
+            },
+            {
+              "code": "}",
+              "note": ""
+            }
+          ]
         },
         {
           "id": "5.C",

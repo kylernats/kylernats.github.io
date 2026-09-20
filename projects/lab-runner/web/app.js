@@ -93,6 +93,23 @@
       wrap.appendChild(b);
     }
 
+    if (step.annotated && step.annotated.length) {
+      const d = el('details', 'ann');
+      d.open = true;
+      d.appendChild(el('summary', '', 'Line by line \u2014 what each line does'));
+      const inner = el('div', 'ann-body');
+      step.annotated.forEach(r => {
+        const row = el('div', 'ann-row');
+        row.appendChild(el('pre', 'ann-code', `<code>${esc(r.code)}</code>`));
+        if (r.note) row.appendChild(el('div', 'ann-note', r.note
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*([^*]+)\*/g, '<em>$1</em>')));
+        inner.appendChild(row);
+      });
+      d.appendChild(inner);
+      wrap.appendChild(d);
+    }
+
     (step.commands || []).forEach(c => {
       const b = el('div', 'block');
       if (c.label) b.appendChild(el('div', 'label', esc(c.label)));

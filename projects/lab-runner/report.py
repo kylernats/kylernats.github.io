@@ -290,6 +290,11 @@ figure.shotimg{margin:12px 0;page-break-inside:avoid}
 figure.shotimg img{width:100%;border:1px solid var(--line);border-radius:6px;display:block}
 figure.shotimg figcaption{font-size:9.5pt;color:var(--mut);margin-top:6px}
 .dgcap{font-size:9.5pt;color:var(--mut);margin:-4px 0 16px;text-align:center}
+.anng{border:1px solid var(--line);border-radius:5px;padding:8px 12px;margin:6px 0 12px}
+.anng-code{background:none;border:none;border-left:none;border-radius:0;padding:4px 0 0;
+  margin:0;font-size:8.5pt;line-height:1.5;color:var(--accent);white-space:pre-wrap}
+.anng-note{font-size:9pt;line-height:1.55;color:var(--mut);margin:2px 0 8px;
+  padding-left:10px;border-left:2px solid var(--line)}
 
 .toc{columns:2;column-gap:26px;font-size:9.5pt;margin-top:10px}
 .toc div{break-inside:avoid;margin-bottom:3px;color:var(--mut)}
@@ -504,6 +509,16 @@ def build_guide(lab: dict, lab_root: Path, evidence_url: str = "") -> str:
                          + (f' on <code>{html.escape(res)}</code>' if res else '') + '</span>')
                 o.append('<ul class="props">' +
                          "".join(f"<li>{x}</li>" for x in st["props"]) + "</ul>")
+
+            if st.get("annotated"):
+                o.append('<span class="lbl">Line by line</span><div class="anng">')
+                for r in st["annotated"]:
+                    o.append(f'<pre class="anng-code"><code>{html.escape(r["code"])}</code></pre>')
+                    if r.get("note"):
+                        note = re.sub(r"`([^`]+)`", r"<code>\1</code>", html.escape(r["note"]))
+                        note = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", note)
+                        o.append(f'<div class="anng-note">{note}</div>')
+                o.append("</div>")
 
             if st.get("table"):
                 t = st["table"]
