@@ -310,7 +310,18 @@
     };
     $('#exportBtn').onclick = exportNotes;
 
-    $('#viewReport').href = '/report?id=' + encodeURIComponent(LAB);
+    $('#viewGuide').href = '/guide?id=' + encodeURIComponent(LAB);
+
+    $('#guideBtn').onclick = async e => {
+      const b = e.target, label = b.textContent;
+      b.textContent = 'Building guide…'; b.disabled = true;
+      try {
+        const d = await api('/api/report?kind=guide');
+        if (d.error) toast(d.error);
+        else toast(`Saved ${d.rel} (${d.size_kb} KB)`);
+      } catch (err) { toast('Guide build failed'); }
+      b.textContent = label; b.disabled = false;
+    };
 
     $('#pdfBtn').onclick = async e => {
       const b = e.target, label = b.textContent;

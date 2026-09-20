@@ -12,6 +12,8 @@ import re
 import time
 from pathlib import Path
 
+import diagrams
+
 
 # ------------------------------------------------------------------ markdown --
 def md(text: str) -> str:
@@ -274,3 +276,281 @@ def build(lab: dict, state: dict, lab_root: Path, evidence_url: str) -> str:
     out.append(f'<footer>{html.escape(lab["title"])} — generated {today} from the lab runner</footer>')
     out.append("</body></html>")
     return "".join(out)
+
+
+# ================================================================== guide ====
+GUIDE_CSS = CSS + diagrams.CSS + """
+/* ---- screen: dark, with a sticky contents rail ---- */
+
+
+/* ---- print: light, A4, no rail ---- */
+
+
+figure.shotimg{margin:12px 0;page-break-inside:avoid}
+figure.shotimg img{width:100%;border:1px solid var(--line);border-radius:6px;display:block}
+figure.shotimg figcaption{font-size:9.5pt;color:var(--mut);margin-top:6px}
+.dgcap{font-size:9.5pt;color:var(--mut);margin:-4px 0 16px;text-align:center}
+
+.toc{columns:2;column-gap:26px;font-size:9.5pt;margin-top:10px}
+.toc div{break-inside:avoid;margin-bottom:3px;color:var(--mut)}
+.toc .p{font-weight:650;color:var(--ink);margin-top:9px}
+.toc .n{font-family:ui-monospace,monospace;color:var(--faint);font-size:8.5pt}
+
+.where{background:#f7f9fc;border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:4px;padding:8px 11px;margin:0 0 11px;font-size:9.5pt}
+.where .k{font:600 7.5pt ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);margin-right:5px}
+
+.lbl{font:600 7.5pt ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);display:block;margin:12px 0 5px}
+.real{border-left:2px solid #0284c7;background:#f0f9ff;padding:9px 12px;margin:10px 0;
+  border-radius:0 4px 4px 0;font-size:9.5pt}
+.real .lbl{color:#0284c7;margin-top:0}
+.why2{border-left:2px solid #7c3aed;background:#f5f3ff;padding:9px 12px;margin:10px 0;
+  border-radius:0 4px 4px 0;font-size:9.5pt}
+.why2 .lbl{color:#7c3aed;margin-top:0}
+ul.props{margin:4px 0 0;padding-left:18px;font-size:9.5pt}
+ul.props li{margin-bottom:3px}
+
+.cmd{background:#1e232b;color:#e8ebf0;border-radius:4px;padding:9px 12px;margin:8px 0;
+  font-family:ui-monospace,monospace;font-size:8.5pt;line-height:1.5;white-space:pre-wrap;
+  word-break:break-word}
+
+.answer{border:1px solid var(--line);border-radius:4px;margin:11px 0;overflow:hidden;
+  page-break-inside:avoid}
+.answer .h{background:#f1f4f8;padding:6px 11px;font:600 8pt ui-monospace,monospace;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--line)}
+.answer pre{border:none;border-left:none;border-radius:0;margin:0;background:#fff}
+
+.shotbox{border:1px dashed var(--amber);background:var(--amber-bg);border-radius:4px;
+  padding:9px 12px;margin:10px 0;font-size:9.5pt;page-break-inside:avoid}
+.shotbox .h{font:600 8pt ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:4px}
+.shotbox .slug{font-family:ui-monospace,monospace;font-weight:650}
+.callout2{background:#f7f9fc;border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:4px;padding:10px 13px;margin:11px 0;font-size:9.5pt}
+
+@media screen {
+  :root{--ink:#E8EBF0;--mut:#98A2B3;--faint:#6B7484;--line:#232932;--accent:#2DD4BF;
+        --accent-bg:rgba(45,212,191,.08);--amber:#FBBF24;--amber-bg:rgba(251,191,36,.07);}
+  body{background:#0B0D10;font-size:15px;line-height:1.65}
+  code{background:#1A1F27;border-color:#232932;color:#5EEAD4}
+  pre{background:#0F1216;border-color:#232932}
+  th{background:#0F1216}
+  .wrapg{display:grid;grid-template-columns:260px minmax(0,1fr);gap:40px;
+         max-width:1280px;margin:0 auto;padding:0 28px}
+  .railg{position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;
+         padding:26px 0;font-size:13px}
+  .railg a{display:block;padding:4px 8px;border-radius:5px;color:var(--mut);text-decoration:none}
+  .railg a:hover{background:#13171D;color:var(--ink)}
+  .railg .p{font:600 10px ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;
+            color:var(--faint);margin:14px 0 4px;padding:0 8px}
+  .bodyg{padding:26px 0 90px;min-width:0}
+  .cover{min-height:auto;padding:40px 0 30px;border-bottom:1px solid var(--line)}
+  .cover h1{font-size:34px}
+  .cover .sub{font-size:17px}
+  .phase{padding-top:34px}
+  .step{background:#13171D;border:1px solid var(--line);border-radius:12px;padding:20px;
+        margin-bottom:18px}
+  .step:last-child{border-bottom:1px solid var(--line)}
+  .where{background:#0F1216}
+  .real{background:rgba(56,189,248,.07);border-left-color:#38BDF8}
+  .real .lbl{color:#38BDF8}
+  .why2{background:rgba(167,139,250,.07);border-left-color:#A78BFA}
+  .why2 .lbl{color:#A78BFA}
+  .answer{border-color:var(--line)}
+  .answer .h{background:#1A1F27;color:var(--mut);border-color:var(--line)}
+  .answer pre{background:#0B0D10}
+  .shotbox{background:rgba(251,191,36,.07)}
+  .callout2{background:#0F1216}
+  .cmd{background:#0F1216;border:1px solid var(--line)}
+  .stats div{background:#13171D}
+  .contents-print{display:none}
+  .dg{--dg-fill:#13171D;--dg-fill-key:rgba(45,212,191,.1);--dg-fill-out:#0F1216;
+      --dg-stroke:#313947;--dg-stroke2:#6B7484;--dg-ink:#E8EBF0;--dg-mut:#98A2B3;
+      --dg-accent:#2DD4BF;--dg-violet:#A78BFA;--dg-bad:#FB7185;
+      border:1px solid var(--line);border-radius:10px;background:#0F1216;padding:14px}
+  figure.shotimg img{border-color:var(--line)}
+
+  /* print sizes are set in pt; on screen they read as cramped */
+  .callout2,.real,.why2,.shotbox{font-size:14px;line-height:1.65;padding:13px 16px}
+  ul.props{font-size:14px;line-height:1.7}
+  .task{font-size:13.5px}
+  .cmd{font-size:12.5px;line-height:1.6;padding:11px 14px}
+  .dgcap{font-size:13px;line-height:1.6}
+  .where{font-size:13.5px;padding:10px 13px}
+  .answer pre{font-size:12.5px;line-height:1.6}
+  .step p{line-height:1.65}
+  .section-title{font-size:22px}
+  .phase-title{font-size:24px}
+  .step-h h3{font-size:17px}
+  .phase-blurb{font-size:14px}
+}
+
+@media print {
+  .railg{display:none}
+  .wrapg{display:block;max-width:none;padding:0}
+  .dg{--dg-fill:#fff;--dg-fill-key:#ecfdf9;--dg-fill-out:#f7f9fc;
+      --dg-stroke:#dde2e9;--dg-stroke2:#8a93a1;--dg-ink:#14181f;--dg-mut:#5b6472;
+      --dg-accent:#0d9488;--dg-violet:#7c3aed;--dg-bad:#be123c;
+      page-break-inside:avoid}
+}
+"""
+
+
+def build_guide(lab: dict, lab_root: Path, evidence_url: str = "") -> str:
+    """The full instruction manual: every step, every argument, the reference
+    code, and every screenshot point. Meant to be followed start to finish."""
+    today = time.strftime("%d %B %Y")
+    all_steps = [s for ph in lab["phases"] for s in ph["steps"]]
+    n_shots = sum(len(s.get("shots") or []) for s in all_steps)
+
+    shots_dir = lab_root / "docs" / "evidence" / "screenshots"
+    have = sorted(p.name for p in shots_dir.glob("*.png")) if shots_dir.is_dir() else []
+
+    def shot_file(slug: str):
+        return next((n for n in have if slug in n), None)
+
+    o = ["<!DOCTYPE html><html lang=en><head><meta charset=utf-8>",
+         f"<title>{html.escape(lab['title'])} — full guide</title>",
+         f"<style>{GUIDE_CSS}</style></head><body>",
+         '<div class="wrapg">']
+
+    rail = ['<nav class="railg">']
+    for ph in lab["phases"]:
+        rail.append(f'<div class="p">{html.escape(ph["title"])}</div>')
+        for st in ph["steps"]:
+            rail.append(f'<a href="#s{html.escape(st["id"])}">{html.escape(st["id"])} &nbsp; '
+                        f'{html.escape(st["title"])}</a>')
+    rail.append("</nav>")
+    o += rail
+    o.append('<div class="bodyg">')
+
+    o.append(f"""
+<section class="cover">
+  <div class="kicker">{html.escape(lab.get('eyebrow','Lab'))} &nbsp;·&nbsp; Full guide</div>
+  <h1>{html.escape(lab['title'])}</h1>
+  <div class="sub">{html.escape(lab.get('subtitle',''))}</div>
+  <div class="meta">
+    <div><span class="k">For</span>Kyler Nats</div>
+    <div><span class="k">Generated</span>{today}</div>
+    <div><span class="k">Steps</span>{len(all_steps)} across {len(lab['phases'])} phases</div>
+    <div><span class="k">Screenshots</span>{n_shots} capture points</div>
+  </div>
+</section>""")
+
+    # contents
+    o.append('<section class="contents-print"><h2 class="section-title">Contents</h2><div class="toc">')
+    for ph in lab["phases"]:
+        o.append(f'<div class="p">{html.escape(ph["id"])} &nbsp; {html.escape(ph["title"])}</div>')
+        for st in ph["steps"]:
+            o.append(f'<div><span class="n">{html.escape(st["id"])}</span> &nbsp; {html.escape(st["title"])}</div>')
+    o.append("</div></section>")
+    o.append(f'<section><div class="callout2">Every command in this guide is run '
+             f'from <code>projects/01-cost-visibility/</code> unless the command says otherwise. '
+             f'Terraform files live in <code>terraform/</code> inside that folder. '
+             f'Check progress any time with <code>./scripts/check.sh</code> — it never touches '
+             f'Azure and never costs anything.</div></section>')
+
+    # ---- how the pieces fit together ----
+    o.append('<section class="phase"><h2 class="section-title">How it fits together</h2>')
+    o.append('<p style="font-size:10pt;color:var(--mut)">Fourteen resources, but only three '
+             'paths through them. An alerting path that ends at a human, a data path that ends '
+             'at a dashboard, and an identity that is allowed to read the bill and nothing '
+             'else.</p>')
+    o.append(diagrams.ARCHITECTURE)
+    o.append('<div class="dgcap">Solid lines carry data. Dashed lines are permission and '
+             'delivery. Everything left of the storage account is built by Terraform; the '
+             'workbook tiles get added in the portal in phase 11.</div>')
+
+    o.append('<h3 style="margin-top:26px;font-size:13pt">Why the forecast alert is the one '
+             'that matters</h3>')
+    o.append('<p style="font-size:10pt;color:var(--mut)">Most people set a budget alert at '
+             '100% and stop. That alert tells you the money is already gone. A forecast alert '
+             'watches the slope instead of the total, so it fires while there is still a month '
+             'left to do something about it.</p>')
+    o.append(diagrams.FORECAST)
+    o.append('<div class="dgcap">Same spending, two alerts. The actual-spend alert is correct '
+             'and useless; by the time it fires the budget is spent.</div>')
+    o.append('</section>')
+
+    for ph in lab["phases"]:
+        o.append(f'<section class="phase"><div class="phase-n">{html.escape(ph["id"])}</div>'
+                 f'<h2 class="phase-title">{html.escape(ph["title"])}</h2>')
+        if ph.get("blurb"):
+            o.append(f'<div class="phase-blurb">{ph["blurb"]}</div>')
+
+        for st in ph["steps"]:
+            o.append(f'<div class="step" id="s{html.escape(st["id"])}">')
+            o.append(f'<div class="step-h"><span class="id">{html.escape(st["id"])}</span>'
+                     f'<h3>{html.escape(st["title"])}</h3></div>')
+
+            if st.get("where"):
+                o.append(f'<div class="where"><span class="k">Write it in</span>'
+                         f'<code>{html.escape(st["where"]["file"])}</code> '
+                         f'<span class="k" style="margin-left:8px">replacing</span>'
+                         f'<code>{html.escape(st["where"]["marker"])}</code></div>')
+
+            if st.get("what"):
+                o.append(f'<p style="font-size:10pt;margin:0 0 8px">{st["what"]}</p>')
+            if st.get("real"):
+                o.append(f'<div class="real"><span class="lbl">Real life</span>{st["real"]}</div>')
+            if st.get("why"):
+                o.append(f'<div class="why2"><span class="lbl">Why it matters</span>{st["why"]}</div>')
+
+            if st.get("props"):
+                res = st.get("resource")
+                o.append('<span class="lbl">What to set'
+                         + (f' on <code>{html.escape(res)}</code>' if res else '') + '</span>')
+                o.append('<ul class="props">' +
+                         "".join(f"<li>{x}</li>" for x in st["props"]) + "</ul>")
+
+            if st.get("table"):
+                t = st["table"]
+                o.append("<table><thead><tr>" +
+                         "".join(f"<th>{h}</th>" for h in t["head"]) + "</tr></thead><tbody>" +
+                         "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>"
+                                 for r in t["rows"]) + "</tbody></table>")
+
+            for c in (st.get("commands") or []):
+                if c.get("label"):
+                    o.append(f'<span class="lbl">{html.escape(c["label"])}</span>')
+                o.append(f'<div class="cmd">{html.escape(c["cmd"])}</div>')
+
+            if st.get("callout"):
+                o.append(f'<div class="callout2">{st["callout"]}</div>')
+
+            for sh in (st.get("shots") or []):
+                o.append(f'<div class="shotbox"><div class="h">Screenshot</div>'
+                         f'<div><span class="slug">{html.escape(sh["slug"])}</span> — {sh["desc"]}</div>'
+                         f'<div class="cmd" style="margin-bottom:0">'
+                         f'./scripts/capture.sh {html.escape(sh["slug"])} '
+                         f'"{html.escape(sh.get("caption",""))}"</div></div>')
+                f = shot_file(sh["slug"])
+                if f and evidence_url:
+                    o.append(f'<figure class="shotimg"><img src="{evidence_url}{f}" alt="">'
+                             f'<figcaption>Captured: {html.escape(sh.get("caption",""))}'
+                             f'</figcaption></figure>')
+
+            hints = st.get("hints") or []
+            if hints and st.get("hintStyle") != "faq":
+                for i, hn in enumerate(hints):
+                    if hn.get("text") and i == 0:
+                        o.append(f'<span class="lbl">Hint</span>'
+                                 f'<div style="font-size:9.5pt;color:var(--mut)">{hn["text"]}</div>')
+                    if hn.get("code") and i == len(hints) - 1:
+                        o.append('<div class="answer"><div class="h">Reference solution — '
+                                 'try it yourself first</div>'
+                                 f'<pre><code>{html.escape(hn["code"])}</code></pre></div>')
+            elif hints:
+                for hn in hints:
+                    o.append(f'<span class="lbl">{html.escape(hn["label"])}</span>'
+                             f'<div style="font-size:9.5pt;color:var(--mut)">{md(hn.get("text",""))}</div>')
+                    if hn.get("code"):
+                        o.append(f'<pre><code>{html.escape(hn["code"])}</code></pre>')
+            o.append("</div>")
+        o.append("</section>")
+
+    o.append(f'<footer>{html.escape(lab["title"])} — full guide, generated {today}</footer>')
+    o.append("</div></div></body></html>")
+    return "".join(o)

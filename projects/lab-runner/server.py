@@ -314,8 +314,13 @@ def ep_report_html(lab_id: str) -> str:
                         f"/evidence?id={lab_id}&file=")
 
 
-def ep_report_pdf(lab_id: str):
-    """Print the report to PDF with headless Chrome, which is already installed."""
+def ep_guide_html(lab_id: str) -> str:
+    return report.build_guide(ep_lab(lab_id), lab_dir(lab_id),
+                              f"/evidence?id={lab_id}&file=")
+
+
+def ep_pdf(lab_id: str, kind: str):
+    """Print a report or the full guide to PDF using headless Chrome."""
     chrome = next((c for c in CHROME_PATHS if Path(c).is_file()), None)
     if not chrome:
         return {"error": "No Chrome/Chromium found. Open the HTML report and use "
@@ -323,13 +328,14 @@ def ep_report_pdf(lab_id: str):
 
     out_dir = lab_dir(lab_id) / "docs" / "reports"
     out_dir.mkdir(parents=True, exist_ok=True)
-    pdf = out_dir / f"{lab_id}-report-{time.strftime('%Y%m%d')}.pdf"
+    name = "guide" if kind == "guide" else "report"
+    pdf = out_dir / f"{lab_id}-{name}-{time.strftime('%Y%m%d')}.pdf"
 
     code, out = run([chrome, "--headless=new", "--disable-gpu",
                      "--no-pdf-header-footer",
                      f"--print-to-pdf={pdf}",
-                     "--virtual-time-budget=15000",
-                     f"http://127.0.0.1:{PORT}/report?id={lab_id}"], timeout=120)
+                     "--virtual-time-budget=20000",
+                     f"http://127.0.0.1:{PORT}/{name}?id={lab_id}"], timeout=180)
 
     if not pdf.is_file():
         return {"error": (out or "chrome produced no file")[-600:]}
@@ -349,7 +355,8 @@ ROUTES = {
     "/api/azure":     lambda q, b: ep_azure(q.get("id", ["01-cost-visibility"])[0]),
     "/api/chat":      lambda q, b: ep_chat_history(q.get("id", ["01-cost-visibility"])[0],
                                                    q.get("step", ["general"])[0]),
-    "/api/report":    lambda q, b: ep_report_pdf(q.get("id", ["01-cost-visibility"])[0]),
+    "/api/report":    lambda q, b: ep_pdf(q.get("id", ["01-cost-visibility"])[0],
+                                          q.get("kind", ["report"])[0]),
 }
 
 MIME = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -384,10 +391,11 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 return self._json({"error": str(e)}, 500)
 
-        if u.path == "/report":
+        if u.path in ("/report", "/guide"):
             lab_id = q.get("id", ["01-cost-visibility"])[0]
             try:
-                return self._send(200, ep_report_html(lab_id).encode(), "text/html; charset=utf-8")
+                fn = ep_guide_html if u.path == "/guide" else ep_report_html
+                return self._send(200, fn(lab_id).encode(), "text/html; charset=utf-8")
             except Exception as e:
                 return self._send(500, str(e).encode(), "text/plain")
 
