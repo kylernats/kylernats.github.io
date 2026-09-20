@@ -10,8 +10,10 @@ LAB="${1:-01-cost-visibility}"
 
 # Refresh the offline guide so the double-click copy is never stale.
 python3 export-guide.py "$LAB" >/dev/null 2>&1 || true
+python3 build-walkthrough.py "$LAB" >/dev/null 2>&1 || true
 
 ( sleep 1; open "http://127.0.0.1:7878/?id=$LAB" ) &
+echo "  Watch first: http://127.0.0.1:7878/watch?id=$LAB"
 echo "  Lab runner : http://127.0.0.1:7878/?id=$LAB"
 echo "  Full guide : http://127.0.0.1:7878/guide?id=$LAB"
 echo "  Offline    : ../$LAB/docs/guide.html  (works with the server off)"

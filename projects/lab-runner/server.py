@@ -399,6 +399,16 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 return self._send(500, str(e).encode(), "text/plain")
 
+        if u.path == "/watch":
+            lab_id = q.get("id", ["01-cost-visibility"])[0]
+            try:
+                f = lab_dir(lab_id) / "docs" / "watch-first.html"
+            except ValueError:
+                return self._send(404, b"not found", "text/plain")
+            if not f.is_file():
+                return self._send(404, b"Run build-walkthrough.py first", "text/plain")
+            return self._send(200, f.read_bytes(), "text/html; charset=utf-8")
+
         if u.path == "/evidence":
             lab_id = q.get("id", ["01-cost-visibility"])[0]
             name = q.get("file", [""])[0]

@@ -311,6 +311,7 @@
     $('#exportBtn').onclick = exportNotes;
 
     $('#viewGuide').href = '/guide?id=' + encodeURIComponent(LAB);
+    $('#watchBtn').href = '/watch?id=' + encodeURIComponent(LAB);
 
     $('#guideBtn').onclick = async e => {
       const b = e.target, label = b.textContent;
