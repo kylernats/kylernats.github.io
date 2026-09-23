@@ -16,3 +16,7 @@ crash.log
 
 # Lab runner
 __pycache__/
+
+# Lab chat transcripts and uploaded screenshots
+projects/*/.chat/
+projects/.lab-shots/
