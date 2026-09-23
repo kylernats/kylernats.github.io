@@ -49,6 +49,15 @@ input[type=checkbox]:checked{background:var(--acc);border-color:var(--acc)}
 input[type=checkbox]:checked::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;
  color:#04211D;font-size:13px;font-weight:700}
 .step p{color:var(--mut);font-size:15px;margin-bottom:12px}
+.where{display:inline-flex;align-items:center;gap:6px;font:600 10.5px var(--mono);
+ letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:10px}
+.where.console{color:#38BDF8;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.35)}
+.where.term{color:var(--acc);background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35)}
+.nav{background:var(--sub);border:1px solid var(--line);border-radius:9px;padding:13px 16px;margin:12px 0;font-size:14.5px}
+.nav b{color:var(--ink);display:block;margin-bottom:6px;font-size:13px;font-family:var(--mono);
+ letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.nav .path{font-family:var(--mono);font-size:13.5px;color:var(--ink);line-height:1.9}
+.nav .path span{color:var(--faint);margin:0 6px}
 .step p.lead{color:var(--ink)}
 
 .cmd{position:relative;background:var(--sub);border:1px solid var(--line);border-radius:9px;
@@ -114,98 +123,99 @@ details div{padding:0 14px 13px;font-size:14px;color:var(--mut)}
 <!-- 1 -->
 <div class="step" id="s1">
   <div class="head"><span class="n">1</span><h2>Start the scenario</h2><input type="checkbox"></div>
-  <p class="lead">Builds the company environment in your local AWS emulator.</p>
+  <span class="where term">Terminal</span>
+  <p class="lead">Builds the company's AWS environment inside your local emulator.</p>
   <div class="cmd">cd ~/Portfolio/projects/ir-01-exposed-customer-data
 ./.venv/bin/python setup.py</div>
-  <div class="look"><b>You should see</b>Four buckets created and a count of CloudTrail log files.</div>
+  <div class="look"><b>You should see</b>Four <code>meridian-</code> buckets created, and a count of CloudTrail log files.</div>
 </div>
 
 <!-- 2 -->
 <div class="step" id="s2">
-  <div class="head"><span class="n">2</span><h2>See what is public right now</h2><input type="checkbox"></div>
-  <p class="lead">Before touching anything, find out how bad it is.</p>
-  <div class="cmd">./.venv/bin/python setup.py --status</div>
-  <div class="look"><b>Write down</b>Which buckets say <code>PUBLIC</code>. There is more than one. That matters later.</div>
-  <p>You can also browse them visually at <a href="http://localhost:4500/console/aws" target="_blank">the Floci console</a> → Storage.</p>
+  <div class="head"><span class="n">2</span><h2>Open the console and find the buckets</h2><input type="checkbox"></div>
+  <span class="where console">Floci console</span>
+  <div class="nav">
+    <b>Where to go</b>
+    <div class="path"><a href="http://localhost:4500/cloud-explorer/aws/storage" target="_blank">http://localhost:4500/cloud-explorer/aws/storage</a></div>
+    <div class="path" style="margin-top:6px;color:var(--mut)">Or: left sidebar <span>&rsaquo;</span> <b style="display:inline;color:var(--ink);font-size:13.5px;text-transform:none;letter-spacing:0">Storage</b> (under STORAGE)</div>
+  </div>
+  <div class="look"><b>You should see</b>A table of 9 buckets. Four start with <code>meridian-</code>. Those are this company's.</div>
+  <p>Take a screenshot now — this is your "before" evidence.</p>
 </div>
 
 <!-- 3 -->
 <div class="step" id="s3">
-  <div class="head"><span class="n">3</span><h2>Look inside the exposed bucket</h2><input type="checkbox"></div>
-  <p class="lead">Confirm it is real customer data, not a false alarm.</p>
-  <div class="cmd">./.venv/bin/python -c "
-import sys; sys.path.insert(0,'../02-ai-security-agent')
-from src import aws_client
-s3 = aws_client.s3()
-for o in s3.list_objects_v2(Bucket='meridian-customer-exports')['Contents']:
-    print(o['Key'])
-print()
-print(s3.get_object(Bucket='meridian-customer-exports',
-      Key='exports/2026-09/shipments-customers.csv')['Body'].read().decode())"</div>
-  <div class="look"><b>Confirm</b>Names, emails, phone numbers, addresses. This is a reportable exposure.</div>
+  <div class="head"><span class="n">3</span><h2>Look at the leaked data</h2><input type="checkbox"></div>
+  <span class="where console">Floci console</span>
+  <div class="nav">
+    <b>Where to click</b>
+    <div class="path">Storage <span>&rsaquo;</span> click the row <b style="display:inline;color:var(--ink);font-size:13.5px;text-transform:none;letter-spacing:0">meridian-customer-exports</b></div>
+    <div class="path" style="margin-top:6px;color:var(--mut)">The panel underneath switches from "Select a storage resource" to a file list.</div>
+  </div>
+  <div class="look"><b>You should see</b>Four objects under <code>exports/</code>. Open <code>shipments-customers.csv</code>.</div>
+  <div class="warn"><b>Confirm it is real</b>Customer names, emails, phone numbers, addresses. This is a reportable exposure, not a false alarm.</div>
 </div>
 
 <!-- 4 -->
 <div class="step" id="s4">
-  <div class="head"><span class="n">4</span><h2>Pull the logs</h2><input type="checkbox"></div>
-  <p class="lead">CloudTrail records every API call and delivers it to S3. Get it onto your machine.</p>
-  <div class="cmd">./.venv/bin/python fetch_logs.py</div>
-  <div class="look"><b>Result</b><code>logs/events.json</code> — one flat list of every event, oldest first.</div>
+  <div class="head"><span class="n">4</span><h2>Find out which buckets are actually public</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">The console lists buckets but does not show bucket policies, so this part is terminal.</p>
+  <div class="cmd">./.venv/bin/python setup.py --status</div>
+  <div class="look"><b>Write down</b>Which rows say <code>PUBLIC</code>. There are <b>two</b>. Only one is a problem — you work out which in step 8.</div>
 </div>
 
 <!-- 5 -->
 <div class="step" id="s5">
-  <div class="head"><span class="n">5</span><h2>Find when it was made public, and who did it</h2><input type="checkbox"></div>
-  <p class="lead">A bucket does not become public on its own. Someone made an API call.</p>
-  <p>Look for the event that changed the bucket policy. You want the time, the username, and the source IP.</p>
-  <div class="cmd">jq -r '.[] | select(.eventName=="PutBucketPolicy" or .eventName=="DeletePublicAccessBlock")
-  | "\(.eventTime)  \(.eventName)  \(.userIdentity.userName)  \(.sourceIPAddress)  \(.requestParameters.bucketName)"' logs/events.json</div>
-  <div class="look"><b>Note down</b>The date, the username, and the IP address. You will need all three.</div>
-  <details><summary>No jq installed?</summary><div>
-    <code>brew install jq</code> — or read <code>logs/events.json</code> in your editor and search for
-    <code>PutBucketPolicy</code>.
-  </div></details>
-  <details><summary>Hint</summary><div>
-    Two events matter, four minutes apart. One removed a safety setting, the other added the
-    public policy. The first one is why the second one worked.
-  </div></details>
+  <div class="head"><span class="n">5</span><h2>Pull the audit logs</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">CloudTrail records every API call and drops it into S3. This downloads and unpacks it.</p>
+  <div class="cmd">./.venv/bin/python fetch_logs.py</div>
+  <div class="look"><b>Result</b>A file at <code>logs/events.json</code> — every event, oldest first.</div>
 </div>
 
 <!-- 6 -->
 <div class="step" id="s6">
-  <div class="head"><span class="n">6</span><h2>Find out what was actually taken</h2><input type="checkbox"></div>
-  <p class="lead">Exposed is not the same as accessed. You need to know which is which.</p>
-  <p>Anonymous requests show a user identity type of <code>AWSAccount</code>. Successful ones have no
-  <code>errorCode</code>.</p>
+  <div class="head"><span class="n">6</span><h2>Find when it was made public, and who did it</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">A bucket does not go public on its own. Someone made an API call. Find it.</p>
+  <div class="cmd">jq -r '.[] | select(.eventName=="PutBucketPolicy" or .eventName=="DeletePublicAccessBlock")
+  | "\(.eventTime)  \(.eventName)  \(.userIdentity.userName)  \(.sourceIPAddress)  \(.requestParameters.bucketName)"' logs/events.json</div>
+  <div class="look"><b>Note down three things</b>The date, the username, and the source IP.</div>
+  <details><summary>jq not installed?</summary><div><code>brew install jq</code>, or open <code>logs/events.json</code> in your editor and search for <code>PutBucketPolicy</code>.</div></details>
+  <details><summary>Hint</summary><div>Two events, four minutes apart, same person. One removed a safety setting; the other added the public policy. The first is why the second worked.</div></details>
+</div>
+
+<!-- 7 -->
+<div class="step" id="s7">
+  <div class="head"><span class="n">7</span><h2>Find out what was actually downloaded</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">Exposed and accessed are different things. You need to know which files really left.</p>
   <div class="cmd">jq -r '.[] | select(.eventName=="GetObject")
   | select(.userIdentity.type=="AWSAccount")
   | select(.errorCode==null)
   | select(.requestParameters.bucketName=="meridian-customer-exports")
   | "\(.eventTime)  \(.sourceIPAddress)  \(.requestParameters.key)"' logs/events.json</div>
-  <div class="look"><b>Count</b>How many successful downloads, how many distinct IP addresses, and which
-  files. Those three numbers go in your answers.</div>
-  <div class="warn"><b>Careful</b>Not every anonymous request succeeded, and not every request was against
-  this bucket. Filter properly or your numbers will be wrong.</div>
-</div>
-
-<!-- 7 -->
-<div class="step" id="s7">
-  <div class="head"><span class="n">7</span><h2>Decide what to do about the second public bucket</h2><input type="checkbox"></div>
-  <p class="lead">Step 2 showed two public buckets. Only one of them is a problem.</p>
-  <div class="cmd">./.venv/bin/python -c "
-import sys; sys.path.insert(0,'../02-ai-security-agent')
-from src import aws_client
-print(aws_client.s3().get_object(Bucket='meridian-web-assets',
-      Key='PURPOSE.txt')['Body'].read().decode())"</div>
-  <div class="warn"><b>This is the judgement call</b>Locking every public bucket looks decisive and takes
-  the company website offline. Knowing which exposure is intentional is the job.</div>
+  <div class="look"><b>Count three things</b>How many lines (downloads), how many unique IP addresses, and how many distinct filenames.</div>
+  <div class="warn"><b>Why each filter matters</b><code>AWSAccount</code> means anonymous. <code>errorCode==null</code> means it succeeded — some attempts were denied. And the bucket filter matters because there is traffic to other buckets in the same log.</div>
 </div>
 
 <!-- 8 -->
 <div class="step" id="s8">
-  <div class="head"><span class="n">8</span><h2>Close the exposure</h2><input type="checkbox"></div>
-  <p class="lead">Two things: remove the public policy, and put the safety setting back so it cannot
-  happen again by accident.</p>
+  <div class="head"><span class="n">8</span><h2>Check the second public bucket before you touch it</h2><input type="checkbox"></div>
+  <span class="where console">Floci console</span>
+  <div class="nav">
+    <b>Where to click</b>
+    <div class="path">Storage <span>&rsaquo;</span> <b style="display:inline;color:var(--ink);font-size:13.5px;text-transform:none;letter-spacing:0">meridian-web-assets</b> <span>&rsaquo;</span> open <b style="display:inline;color:var(--ink);font-size:13.5px;text-transform:none;letter-spacing:0">PURPOSE.txt</b></div>
+  </div>
+  <div class="warn"><b>This is the judgement call</b>Locking every public bucket looks decisive and takes the company website offline. Knowing which exposure is intentional is the actual job.</div>
+</div>
+
+<!-- 9 -->
+<div class="step" id="s9">
+  <div class="head"><span class="n">9</span><h2>Close the exposure</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">Remove the public policy, then put the safety setting back so it cannot happen again by accident.</p>
   <div class="cmd">./.venv/bin/python -c "
 import sys; sys.path.insert(0,'../02-ai-security-agent')
 from src import aws_client
@@ -215,29 +225,34 @@ s3.put_public_access_block(Bucket='meridian-customer-exports',
     PublicAccessBlockConfiguration={'BlockPublicAcls':True,'IgnorePublicAcls':True,
                                     'BlockPublicPolicy':True,'RestrictPublicBuckets':True})
 print('closed')"</div>
-  <div class="warn"><b>Do not</b>Delete the objects, and do not touch the CloudTrail log bucket. You need
-  both for the breach report.</div>
-  <div class="look"><b>Check it</b><code>./.venv/bin/python setup.py --status</code></div>
-</div>
-
-<!-- 9 -->
-<div class="step" id="s9">
-  <div class="head"><span class="n">9</span><h2>Write down your answers</h2><input type="checkbox"></div>
-  <p class="lead">Copy the template, then fill it in from what you found.</p>
-  <div class="cmd">cp answers.template.json answers.json
-open -e answers.json</div>
-  <div class="look"><b>Fields</b>Date, who, source IP, the external IPs, the files taken, the download
-  count, and your call on the website bucket.</div>
+  <div class="warn"><b>Do not</b>Delete the objects, and do not touch <code>meridian-cloudtrail-logs</code>. You need both for the breach report.</div>
 </div>
 
 <!-- 10 -->
 <div class="step" id="s10">
-  <div class="head"><span class="n">10</span><h2>Get graded</h2><input type="checkbox"></div>
+  <div class="head"><span class="n">10</span><h2>Confirm it is closed</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <div class="cmd">./.venv/bin/python setup.py --status</div>
+  <div class="look"><b>You should see</b><code>meridian-customer-exports</code> now reads <code>none</code> for policy and <code>all on</code> for public block. <code>meridian-web-assets</code> should still say <code>PUBLIC</code>.</div>
+  <p>Screenshot the console Storage page again — that is your "after" evidence.</p>
+</div>
+
+<!-- 11 -->
+<div class="step" id="s11">
+  <div class="head"><span class="n">11</span><h2>Write down your answers</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <div class="cmd">cp answers.template.json answers.json
+open -e answers.json</div>
+  <div class="look"><b>Fill in</b>The date, who, the source IP, the external IPs, the files taken, the download count, and your call on the website bucket.</div>
+</div>
+
+<!-- 12 -->
+<div class="step" id="s12">
+  <div class="head"><span class="n">12</span><h2>Get graded</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
   <div class="cmd">./.venv/bin/python verify.py</div>
-  <p>Scored out of 24 across two halves: did you fix it correctly, and did you work out what happened.</p>
-  <details><summary>Stuck on a failing check?</summary><div>
-    <code>./.venv/bin/python verify.py --explain</code> shows what was expected.
-  </div></details>
+  <p>Scored out of 24: half for fixing it correctly, half for working out what happened.</p>
+  <details><summary>A check is failing and you cannot see why</summary><div><code>./.venv/bin/python verify.py --explain</code> shows what was expected.</div></details>
 </div>
 
 <div class="done-box">
@@ -253,7 +268,7 @@ open -e answers.json</div>
 </div>
 
 <div class="bar"><div class="in">
-  <span id="count">0 / 10</span>
+  <span id="count">0 / 12</span>
   <div class="prog"><i id="fill"></i></div>
   <button id="reset">Reset progress</button>
 </div></div>
