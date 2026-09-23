@@ -24,6 +24,22 @@ echo
 echo "Lab 01 — checks"
 echo "---------------"
 
+# If the practice bucket is gone but the alias exists, the most likely story is
+# that the lab was finished and cleaned up, not that it was never started.
+if ! A s3api head-bucket --bucket kn-practice >/dev/null 2>&1; then
+  if grep -q awslocal ~/.zshrc 2>/dev/null; then
+    printf "  ${D}kn-practice does not exist, but your awslocal alias is set up.${N}\n"
+    printf "  ${D}That usually means you finished and cleaned up in step 12.${N}\n\n"
+    printf "  This check has to run ${G}before${N} cleanup. To confirm properly, redo\n"
+    printf "  steps 5, 6, 8 and 9 (about a minute), then run this again:\n\n"
+    printf "    ${D}awslocal s3 mb s3://kn-practice${N}\n"
+    printf "    ${D}echo \"hello from my local cloud\" > hello.txt${N}\n"
+    printf "    ${D}awslocal s3 cp hello.txt s3://kn-practice/hello.txt${N}\n"
+    printf "    ${D}./verify.sh${N}\n\n"
+    exit 2
+  fi
+fi
+
 # 1. emulator reachable
 if A s3 ls >/dev/null 2>&1; then r=1; else r=0; fi
 check "Emulator is reachable" "$r" "Is the container running? docker ps"
