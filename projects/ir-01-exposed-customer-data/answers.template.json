@@ -1,0 +1,15 @@
+{
+  "_instructions": "Copy this file to answers.json and fill it in from the CloudTrail logs. Then run: python3 verify.py",
+
+  "date_made_public": "YYYY-MM-DD",
+  "who_made_it_public": "",
+  "source_ip_of_change": "",
+
+  "external_ips_that_downloaded": [],
+  "objects_downloaded": [],
+  "successful_anonymous_downloads": 0,
+
+  "web_assets_decision": "leave | remediate — and why",
+
+  "_summary": "Two or three sentences: what happened, what you did, what would stop it recurring."
+}

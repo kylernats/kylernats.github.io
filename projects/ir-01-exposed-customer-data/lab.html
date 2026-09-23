@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab IR-01 — Exposed Customer Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}*{margin:0}
+:root{--bg:#0B0D10;--card:#13171D;--sub:#0F1216;--line:#232932;--line2:#313947;
+ --ink:#E8EBF0;--mut:#98A2B3;--faint:#6B7484;--acc:#2DD4BF;--amb:#FBBF24;--red:#FB7185;
+ --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+ --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--sans);padding:0 20px 100px}
+.wrap{max-width:780px;margin:0 auto}
+a{color:var(--acc)}
+code{font-family:var(--mono);font-size:.87em;background:#1A1F27;border:1px solid var(--line);
+ border-radius:5px;padding:.1em .38em;color:#5EEAD4}
+
+header{padding:46px 0 28px;border-bottom:1px solid var(--line);margin-bottom:34px}
+.tag{font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
+h1{font-size:34px;letter-spacing:-.025em;margin:10px 0 12px;line-height:1.15}
+.meta{display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px;color:var(--faint);font-family:var(--mono)}
+
+.call{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--amb);
+ border-radius:12px;padding:22px 24px;margin-bottom:14px}
+.call .from{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amb);margin-bottom:10px}
+.call p{color:var(--ink);margin-bottom:10px}
+.call p:last-child{margin-bottom:0}
+
+.job{background:var(--sub);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:38px}
+.job h3{font-size:15px;margin-bottom:10px}
+.job ol{margin:0;padding-left:20px;color:var(--mut);font-size:15px}
+.job li{margin-bottom:5px}
+
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;
+ padding:22px 24px;margin-bottom:14px;transition:border-color .2s}
+.step.done{border-color:rgba(45,212,191,.4);background:linear-gradient(0deg,rgba(45,212,191,.05),rgba(45,212,191,.05)),var(--card)}
+.head{display:flex;align-items:flex-start;gap:13px;margin-bottom:12px}
+.n{width:26px;height:26px;flex:none;border-radius:50%;background:#1A1F27;border:1px solid var(--line2);
+ color:var(--mut);font:600 12px var(--mono);display:grid;place-items:center;margin-top:1px}
+.step.done .n{background:var(--acc);border-color:var(--acc);color:#04211D}
+h2{font-size:19px;letter-spacing:-.02em;flex:1;line-height:1.3}
+input[type=checkbox]{appearance:none;width:21px;height:21px;flex:none;border:1.5px solid var(--line2);
+ border-radius:6px;background:var(--bg);cursor:pointer;margin-top:2px;position:relative}
+input[type=checkbox]:checked{background:var(--acc);border-color:var(--acc)}
+input[type=checkbox]:checked::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;
+ color:#04211D;font-size:13px;font-weight:700}
+.step p{color:var(--mut);font-size:15px;margin-bottom:12px}
+.step p.lead{color:var(--ink)}
+
+.cmd{position:relative;background:var(--sub);border:1px solid var(--line);border-radius:9px;
+ padding:13px 48px 13px 15px;font:13px/1.6 var(--mono);white-space:pre-wrap;word-break:break-word;margin:12px 0}
+.cmd button{position:absolute;top:8px;right:8px;background:#1A1F27;border:1px solid var(--line2);
+ color:var(--mut);border-radius:6px;padding:4px 9px;font:500 11px var(--sans);cursor:pointer}
+.cmd button:hover{color:var(--ink);border-color:var(--acc)}
+
+.look{border-left:2px solid var(--acc);padding:2px 0 2px 14px;margin:12px 0;font-size:14.5px;color:var(--mut)}
+.look b{color:var(--ink);display:block;margin-bottom:3px;font-size:13px}
+.warn{border-left:2px solid var(--amb);padding:2px 0 2px 14px;margin:12px 0;font-size:14.5px;color:var(--mut)}
+.warn b{color:var(--amb);display:block;margin-bottom:3px;font-size:13px}
+
+details{margin-top:12px;border:1px solid var(--line);border-radius:9px;background:var(--sub);overflow:hidden}
+summary{cursor:pointer;padding:9px 14px;font-size:13.5px;color:var(--faint);list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸ ";color:var(--acc)}
+details[open] summary::before{content:"▾ "}
+summary:hover{color:var(--ink)}
+details div{padding:0 14px 13px;font-size:14px;color:var(--mut)}
+
+.done-box{background:var(--card);border:1px solid var(--acc);border-radius:12px;padding:24px;margin-top:30px}
+.done-box h3{font-size:18px;margin-bottom:10px}
+.done-box p{color:var(--mut);font-size:15px;margin-bottom:12px}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,13,16,.94);backdrop-filter:blur(10px);
+ border-top:1px solid var(--line);padding:12px 20px}
+.bar .in{max-width:780px;margin:0 auto;display:flex;align-items:center;gap:14px;font-size:13.5px;color:var(--mut)}
+.prog{flex:1;height:5px;background:#1A1F27;border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.bar button{background:none;border:1px solid var(--line2);color:var(--faint);border-radius:7px;
+ padding:5px 11px;font:500 12px var(--sans);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="tag">Lab IR-01 · Incident Response</div>
+  <h1>Customer data left open to the internet</h1>
+  <div class="meta"><span>~45 minutes</span><span>AWS · S3 · CloudTrail</span><span>Graded</span></div>
+</header>
+
+<div class="call">
+  <div class="from">08:14 — escalated from support</div>
+  <p>A customer emailed us. They said they found a link to what looks like our internal
+  shipment records — customer names, emails, phone numbers, addresses — and it opened
+  with no login.</p>
+  <p>Support confirmed the link works from their phone on mobile data. It is public.</p>
+  <p>You are the security analyst on shift. Figure out what happened and stop it.</p>
+</div>
+
+<div class="job">
+  <h3>What you need to produce</h3>
+  <ol>
+    <li>The exposure closed</li>
+    <li>When it started, and who caused it</li>
+    <li>What was actually downloaded, and by whom</li>
+    <li>A short written summary</li>
+  </ol>
+</div>
+
+<!-- 1 -->
+<div class="step" id="s1">
+  <div class="head"><span class="n">1</span><h2>Start the scenario</h2><input type="checkbox"></div>
+  <p class="lead">Builds the company environment in your local AWS emulator.</p>
+  <div class="cmd">cd ~/Portfolio/projects/ir-01-exposed-customer-data
+./.venv/bin/python setup.py</div>
+  <div class="look"><b>You should see</b>Four buckets created and a count of CloudTrail log files.</div>
+</div>
+
+<!-- 2 -->
+<div class="step" id="s2">
+  <div class="head"><span class="n">2</span><h2>See what is public right now</h2><input type="checkbox"></div>
+  <p class="lead">Before touching anything, find out how bad it is.</p>
+  <div class="cmd">./.venv/bin/python setup.py --status</div>
+  <div class="look"><b>Write down</b>Which buckets say <code>PUBLIC</code>. There is more than one. That matters later.</div>
+  <p>You can also browse them visually at <a href="http://localhost:4500/console/aws" target="_blank">the Floci console</a> → Storage.</p>
+</div>
+
+<!-- 3 -->
+<div class="step" id="s3">
+  <div class="head"><span class="n">3</span><h2>Look inside the exposed bucket</h2><input type="checkbox"></div>
+  <p class="lead">Confirm it is real customer data, not a false alarm.</p>
+  <div class="cmd">./.venv/bin/python -c "
+import sys; sys.path.insert(0,'../02-ai-security-agent')
+from src import aws_client
+s3 = aws_client.s3()
+for o in s3.list_objects_v2(Bucket='meridian-customer-exports')['Contents']:
+    print(o['Key'])
+print()
+print(s3.get_object(Bucket='meridian-customer-exports',
+      Key='exports/2026-09/shipments-customers.csv')['Body'].read().decode())"</div>
+  <div class="look"><b>Confirm</b>Names, emails, phone numbers, addresses. This is a reportable exposure.</div>
+</div>
+
+<!-- 4 -->
+<div class="step" id="s4">
+  <div class="head"><span class="n">4</span><h2>Pull the logs</h2><input type="checkbox"></div>
+  <p class="lead">CloudTrail records every API call and delivers it to S3. Get it onto your machine.</p>
+  <div class="cmd">./.venv/bin/python fetch_logs.py</div>
+  <div class="look"><b>Result</b><code>logs/events.json</code> — one flat list of every event, oldest first.</div>
+</div>
+
+<!-- 5 -->
+<div class="step" id="s5">
+  <div class="head"><span class="n">5</span><h2>Find when it was made public, and who did it</h2><input type="checkbox"></div>
+  <p class="lead">A bucket does not become public on its own. Someone made an API call.</p>
+  <p>Look for the event that changed the bucket policy. You want the time, the username, and the source IP.</p>
+  <div class="cmd">jq -r '.[] | select(.eventName=="PutBucketPolicy" or .eventName=="DeletePublicAccessBlock")
+  | "\(.eventTime)  \(.eventName)  \(.userIdentity.userName)  \(.sourceIPAddress)  \(.requestParameters.bucketName)"' logs/events.json</div>
+  <div class="look"><b>Note down</b>The date, the username, and the IP address. You will need all three.</div>
+  <details><summary>No jq installed?</summary><div>
+    <code>brew install jq</code> — or read <code>logs/events.json</code> in your editor and search for
+    <code>PutBucketPolicy</code>.
+  </div></details>
+  <details><summary>Hint</summary><div>
+    Two events matter, four minutes apart. One removed a safety setting, the other added the
+    public policy. The first one is why the second one worked.
+  </div></details>
+</div>
+
+<!-- 6 -->
+<div class="step" id="s6">
+  <div class="head"><span class="n">6</span><h2>Find out what was actually taken</h2><input type="checkbox"></div>
+  <p class="lead">Exposed is not the same as accessed. You need to know which is which.</p>
+  <p>Anonymous requests show a user identity type of <code>AWSAccount</code>. Successful ones have no
+  <code>errorCode</code>.</p>
+  <div class="cmd">jq -r '.[] | select(.eventName=="GetObject")
+  | select(.userIdentity.type=="AWSAccount")
+  | select(.errorCode==null)
+  | select(.requestParameters.bucketName=="meridian-customer-exports")
+  | "\(.eventTime)  \(.sourceIPAddress)  \(.requestParameters.key)"' logs/events.json</div>
+  <div class="look"><b>Count</b>How many successful downloads, how many distinct IP addresses, and which
+  files. Those three numbers go in your answers.</div>
+  <div class="warn"><b>Careful</b>Not every anonymous request succeeded, and not every request was against
+  this bucket. Filter properly or your numbers will be wrong.</div>
+</div>
+
+<!-- 7 -->
+<div class="step" id="s7">
+  <div class="head"><span class="n">7</span><h2>Decide what to do about the second public bucket</h2><input type="checkbox"></div>
+  <p class="lead">Step 2 showed two public buckets. Only one of them is a problem.</p>
+  <div class="cmd">./.venv/bin/python -c "
+import sys; sys.path.insert(0,'../02-ai-security-agent')
+from src import aws_client
+print(aws_client.s3().get_object(Bucket='meridian-web-assets',
+      Key='PURPOSE.txt')['Body'].read().decode())"</div>
+  <div class="warn"><b>This is the judgement call</b>Locking every public bucket looks decisive and takes
+  the company website offline. Knowing which exposure is intentional is the job.</div>
+</div>
+
+<!-- 8 -->
+<div class="step" id="s8">
+  <div class="head"><span class="n">8</span><h2>Close the exposure</h2><input type="checkbox"></div>
+  <p class="lead">Two things: remove the public policy, and put the safety setting back so it cannot
+  happen again by accident.</p>
+  <div class="cmd">./.venv/bin/python -c "
+import sys; sys.path.insert(0,'../02-ai-security-agent')
+from src import aws_client
+s3 = aws_client.s3()
+s3.delete_bucket_policy(Bucket='meridian-customer-exports')
+s3.put_public_access_block(Bucket='meridian-customer-exports',
+    PublicAccessBlockConfiguration={'BlockPublicAcls':True,'IgnorePublicAcls':True,
+                                    'BlockPublicPolicy':True,'RestrictPublicBuckets':True})
+print('closed')"</div>
+  <div class="warn"><b>Do not</b>Delete the objects, and do not touch the CloudTrail log bucket. You need
+  both for the breach report.</div>
+  <div class="look"><b>Check it</b><code>./.venv/bin/python setup.py --status</code></div>
+</div>
+
+<!-- 9 -->
+<div class="step" id="s9">
+  <div class="head"><span class="n">9</span><h2>Write down your answers</h2><input type="checkbox"></div>
+  <p class="lead">Copy the template, then fill it in from what you found.</p>
+  <div class="cmd">cp answers.template.json answers.json
+open -e answers.json</div>
+  <div class="look"><b>Fields</b>Date, who, source IP, the external IPs, the files taken, the download
+  count, and your call on the website bucket.</div>
+</div>
+
+<!-- 10 -->
+<div class="step" id="s10">
+  <div class="head"><span class="n">10</span><h2>Get graded</h2><input type="checkbox"></div>
+  <div class="cmd">./.venv/bin/python verify.py</div>
+  <p>Scored out of 24 across two halves: did you fix it correctly, and did you work out what happened.</p>
+  <details><summary>Stuck on a failing check?</summary><div>
+    <code>./.venv/bin/python verify.py --explain</code> shows what was expected.
+  </div></details>
+</div>
+
+<div class="done-box">
+  <h3>When you hit 100%</h3>
+  <p>Write two or three sentences in the <code>_summary</code> field of <code>answers.json</code>:
+  what happened, what you did, and what would stop it happening quietly again.</p>
+  <p>That paragraph is the thing you say out loud in an interview. Everything else was just
+  getting to it.</p>
+  <p style="color:var(--faint);font-size:14px">Want to run it again clean:
+  <code>./.venv/bin/python setup.py --reset &amp;&amp; ./.venv/bin/python setup.py</code></p>
+</div>
+
+</div>
+
+<div class="bar"><div class="in">
+  <span id="count">0 / 10</span>
+  <div class="prog"><i id="fill"></i></div>
+  <button id="reset">Reset progress</button>
+</div></div>
+
+<script>
+(function(){
+  var KEY='ir01-progress';
+  var boxes=[].slice.call(document.querySelectorAll('.step input[type=checkbox]'));
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+
+  function paint(){
+    var n=0;
+    boxes.forEach(function(b){
+      var step=b.closest('.step');
+      step.classList.toggle('done',b.checked);
+      if(b.checked)n++;
+    });
+    document.getElementById('count').textContent=n+' / '+boxes.length;
+    document.getElementById('fill').style.width=(n/boxes.length*100)+'%';
+  }
+  boxes.forEach(function(b){
+    var id=b.closest('.step').id;
+    b.checked=!!saved[id];
+    b.addEventListener('change',function(){
+      saved[id]=b.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}
+      paint();
+    });
+  });
+  document.getElementById('reset').onclick=function(){
+    try{localStorage.removeItem(KEY)}catch(e){}
+    boxes.forEach(function(b){b.checked=false});
+    paint();
+  };
+
+  document.querySelectorAll('.cmd').forEach(function(c){
+    var b=document.createElement('button');
+    b.textContent='Copy';
+    b.onclick=function(){
+      navigator.clipboard.writeText(c.childNodes[0].nodeValue.trim()).then(function(){
+        b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1300);
+      });
+    };
+    c.appendChild(b);
+  });
+
+  paint();
+})();
+</script>
+</body>
+</html>
