@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 01 — Your Local AWS Environment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}*{margin:0}
+:root{--bg:#0B0D10;--card:#13171D;--sub:#0F1216;--line:#232932;--line2:#313947;
+ --ink:#E8EBF0;--mut:#98A2B3;--faint:#6B7484;--acc:#2DD4BF;--amb:#FBBF24;--blue:#38BDF8;
+ --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+ --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--sans);padding:0 20px 100px}
+.wrap{max-width:780px;margin:0 auto}
+a{color:var(--acc)}
+code{font-family:var(--mono);font-size:.87em;background:#1A1F27;border:1px solid var(--line);
+ border-radius:5px;padding:.1em .38em;color:#5EEAD4}
+
+header{padding:46px 0 28px;border-bottom:1px solid var(--line);margin-bottom:30px}
+.tag{font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
+h1{font-size:34px;letter-spacing:-.025em;margin:10px 0 12px;line-height:1.15}
+.meta{display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px;color:var(--faint);font-family:var(--mono)}
+.intro{background:var(--sub);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:34px}
+.intro p{color:var(--mut);font-size:15px;margin-bottom:10px}
+.intro p:last-child{margin-bottom:0}
+.intro b{color:var(--ink)}
+
+.part{font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+ margin:32px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;
+ padding:22px 24px;margin-bottom:14px;transition:border-color .2s}
+.step.done{border-color:rgba(45,212,191,.4);background:linear-gradient(0deg,rgba(45,212,191,.05),rgba(45,212,191,.05)),var(--card)}
+.head{display:flex;align-items:flex-start;gap:13px;margin-bottom:10px}
+.n{width:26px;height:26px;flex:none;border-radius:50%;background:#1A1F27;border:1px solid var(--line2);
+ color:var(--mut);font:600 12px var(--mono);display:grid;place-items:center;margin-top:1px}
+.step.done .n{background:var(--acc);border-color:var(--acc);color:#04211D}
+h2{font-size:19px;letter-spacing:-.02em;flex:1;line-height:1.3}
+input[type=checkbox]{appearance:none;width:21px;height:21px;flex:none;border:1.5px solid var(--line2);
+ border-radius:6px;background:var(--bg);cursor:pointer;margin-top:2px;position:relative}
+input[type=checkbox]:checked{background:var(--acc);border-color:var(--acc)}
+input[type=checkbox]:checked::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;
+ color:#04211D;font-size:13px;font-weight:700}
+.step p{color:var(--mut);font-size:15px;margin-bottom:12px}
+.step p.lead{color:var(--ink)}
+
+.where{display:inline-flex;font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+ padding:3px 9px;border-radius:99px;margin-bottom:10px}
+.where.console{color:var(--blue);background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.35)}
+.where.term{color:var(--acc);background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35)}
+
+.cmd{position:relative;background:var(--sub);border:1px solid var(--line);border-radius:9px;
+ padding:13px 48px 13px 15px;font:13px/1.6 var(--mono);white-space:pre-wrap;word-break:break-word;margin:12px 0}
+.cmd button{position:absolute;top:8px;right:8px;background:#1A1F27;border:1px solid var(--line2);
+ color:var(--mut);border-radius:6px;padding:4px 9px;font:500 11px var(--sans);cursor:pointer}
+.cmd button:hover{color:var(--ink);border-color:var(--acc)}
+
+.out{background:#0A0C0F;border:1px solid var(--line);border-left:2px solid var(--faint);border-radius:0 8px 8px 0;
+ padding:11px 15px;font:12.5px/1.6 var(--mono);color:var(--mut);margin:12px 0;white-space:pre-wrap;overflow-x:auto}
+.out b{color:var(--faint);display:block;font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+
+.look{border-left:2px solid var(--acc);padding:2px 0 2px 14px;margin:12px 0;font-size:14.5px;color:var(--mut)}
+.look b{color:var(--ink);display:block;margin-bottom:3px;font-size:13px}
+.warn{border-left:2px solid var(--amb);padding:2px 0 2px 14px;margin:12px 0;font-size:14.5px;color:var(--mut)}
+.warn b{color:var(--amb);display:block;margin-bottom:3px;font-size:13px}
+.nav{background:var(--sub);border:1px solid var(--line);border-radius:9px;padding:13px 16px;margin:12px 0}
+.nav b{display:block;font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.nav .path{font-family:var(--mono);font-size:13.5px;line-height:1.9}
+
+table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+td code{font-size:12.5px}
+.tbl{border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:14px 0}
+
+.done-box{background:var(--card);border:1px solid var(--acc);border-radius:12px;padding:24px;margin-top:30px}
+.done-box h3{font-size:18px;margin-bottom:10px}
+.done-box p{color:var(--mut);font-size:15px;margin-bottom:12px}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,13,16,.94);backdrop-filter:blur(10px);
+ border-top:1px solid var(--line);padding:12px 20px}
+.bar .in{max-width:780px;margin:0 auto;display:flex;align-items:center;gap:14px;font-size:13.5px;color:var(--mut)}
+.prog{flex:1;height:5px;background:#1A1F27;border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.bar button{background:none;border:1px solid var(--line2);color:var(--faint);border-radius:7px;
+ padding:5px 11px;font:500 12px var(--sans);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="tag">Lab 01 · Fundamentals</div>
+  <h1>Your local AWS environment</h1>
+  <div class="meta"><span>~30 minutes</span><span>No prior AWS needed</span><span>Costs nothing</span></div>
+</header>
+
+<div class="intro">
+  <p>You have a <b>fake AWS</b> running on your Mac. It speaks the same language as the real
+  thing — same commands, same responses — but it lives in Docker, costs nothing, and you
+  cannot break anything that matters.</p>
+  <p>This lab teaches you how to talk to it. By the end you will have created storage,
+  put a file in it, made it public, seen why that is dangerous, and locked it back down.</p>
+  <p>That last part is the whole point: <b>lab 02 is a real breach investigation</b>, and it
+  assumes everything here.</p>
+</div>
+
+<div class="part">Part 1 — What am I actually running</div>
+
+<div class="step" id="s1">
+  <div class="head"><span class="n">1</span><h2>Check it is running</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <div class="cmd">docker ps</div>
+  <div class="out"><b>You should see a line like</b>local_aws_floci   floci/floci:latest   Up 2 hours (healthy)   0.0.0.0:4566-&gt;4566/tcp</div>
+  <div class="look"><b>What this means</b>A container called <code>local_aws_floci</code> is running and listening on
+  <b>port 4566</b>. That port is your fake AWS.</div>
+  <div class="warn"><b>Not running?</b><code>cd ~/local-aws-test &amp;&amp; docker compose up -d</code></div>
+</div>
+
+<div class="step" id="s2">
+  <div class="head"><span class="n">2</span><h2>Open the console</h2><input type="checkbox"></div>
+  <span class="where console">Browser</span>
+  <div class="nav">
+    <b>Go here</b>
+    <div class="path"><a href="http://localhost:4500/cloud-explorer/aws/storage" target="_blank">http://localhost:4500/cloud-explorer/aws/storage</a></div>
+  </div>
+  <div class="look"><b>What you are looking at</b>A web UI for your fake AWS. The sidebar lists services —
+  Storage is S3, Identity is IAM, SQS is queues. It shows what exists but it cannot change much.</div>
+  <div class="warn"><b>Two different ports</b><code>4500</code> is the web console you look at.
+  <code>4566</code> is the API your commands talk to. Do not mix them up.</div>
+</div>
+
+<div class="part">Part 2 — Talking to it from the terminal</div>
+
+<div class="step" id="s3">
+  <div class="head"><span class="n">3</span><h2>Set up your shortcut</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">Normally <code>aws</code> talks to Amazon. You need to tell it to talk to your Mac
+  instead, every single time, with <code>--endpoint-url http://localhost:4566</code>.</p>
+  <p>That gets old fast, so make a shortcut called <code>awslocal</code>.</p>
+  <div class="cmd">echo 'alias awslocal="AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=us-east-1 aws --endpoint-url http://localhost:4566"' >> ~/.zshrc
+source ~/.zshrc</div>
+  <div class="look"><b>From now on</b><code>awslocal</code> means "run an AWS command against my local fake AWS".</div>
+  <div class="warn"><b>About those credentials</b>They are literally the word <code>test</code>. Your fake AWS
+  accepts anything. Real AWS would reject them instantly — which is a useful safety net.</div>
+</div>
+
+<div class="step" id="s4">
+  <div class="head"><span class="n">4</span><h2>Your first command</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <div class="cmd">awslocal s3 ls</div>
+  <div class="out"><b>Output</b>2026-09-23 14:40:01 meridian-cloudtrail-logs
+2026-09-23 13:55:06 agentlab-public-reports
+2026-09-23 14:40:01 meridian-web-assets
+...</div>
+  <div class="look"><b>What happened</b><code>s3</code> is the storage service. <code>ls</code> lists your buckets.
+  A <b>bucket</b> is just a top-level folder. Those existing ones are from other labs.</div>
+</div>
+
+<div class="part">Part 3 — Doing things</div>
+
+<div class="step" id="s5">
+  <div class="head"><span class="n">5</span><h2>Create a bucket</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <div class="cmd">awslocal s3 mb s3://kn-practice</div>
+  <div class="out"><b>Output</b>make_bucket: kn-practice</div>
+  <div class="look"><b>Breaking it down</b><code>mb</code> = make bucket. <code>s3://</code> is how you address
+  storage, the same way <code>https://</code> addresses a website.</div>
+</div>
+
+<div class="step" id="s6">
+  <div class="head"><span class="n">6</span><h2>Put a file in it</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <div class="cmd">echo "hello from my local cloud" > hello.txt
+awslocal s3 cp hello.txt s3://kn-practice/hello.txt</div>
+  <div class="out"><b>Output</b>upload: ./hello.txt to s3://kn-practice/hello.txt</div>
+  <p>Now list what is inside, and read it back without downloading it:</p>
+  <div class="cmd">awslocal s3 ls s3://kn-practice/
+awslocal s3 cp s3://kn-practice/hello.txt -</div>
+  <div class="look"><b>The trailing dash</b>means "print it to my screen" instead of saving a copy.</div>
+</div>
+
+<div class="step" id="s7">
+  <div class="head"><span class="n">7</span><h2>Find it in the console</h2><input type="checkbox"></div>
+  <span class="where console">Browser</span>
+  <div class="nav">
+    <b>Where to click</b>
+    <div class="path">Storage &rsaquo; hit <b>Refresh</b> &rsaquo; click the row <b>kn-practice</b></div>
+  </div>
+  <div class="look"><b>Point of this step</b>The terminal and the console are two views of the same thing.
+  You made it with a command; it shows up in the UI. Use whichever is faster for the job.</div>
+</div>
+
+<div class="part">Part 4 — The part that matters for security</div>
+
+<div class="step" id="s8">
+  <div class="head"><span class="n">8</span><h2>Make it public</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">A <b>bucket policy</b> is a rule about who can do what. This one says anyone can read.</p>
+  <div class="cmd">awslocal s3api put-bucket-policy --bucket kn-practice --policy '{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AnyoneCanRead",
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::kn-practice/*"
+  }]
+}'</div>
+  <div class="look"><b>Read that policy line by line</b>
+    <div class="tbl"><table>
+      <tr><td><code>"Effect": "Allow"</code></td><td>Permit, rather than deny</td></tr>
+      <tr><td><code>"Principal": "*"</code></td><td><b>Who.</b> The <code>*</code> means anyone at all, including people with no account</td></tr>
+      <tr><td><code>"Action": "s3:GetObject"</code></td><td><b>What.</b> Download files</td></tr>
+      <tr><td><code>"Resource": ".../*"</code></td><td><b>Which files.</b> Every file in this bucket</td></tr>
+    </table></div>
+  </div>
+  <div class="warn"><b>This one line is the breach</b><code>"Principal": "*"</code> is what turns private company
+  data into a public website. It is the single most common cause of large data exposures, and it is
+  exactly what you will be investigating in lab 02.</div>
+</div>
+
+<div class="step" id="s9">
+  <div class="head"><span class="n">9</span><h2>Read the policy back, then remove it</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">This is the command you use to answer "is this bucket public?"</p>
+  <div class="cmd">awslocal s3api get-bucket-policy --bucket kn-practice --query Policy --output text</div>
+  <p>Now take it away and confirm it is gone:</p>
+  <div class="cmd">awslocal s3api delete-bucket-policy --bucket kn-practice
+awslocal s3api get-bucket-policy --bucket kn-practice</div>
+  <div class="out"><b>The second command should now error</b>An error occurred (NoSuchBucketPolicy) ...</div>
+  <div class="look"><b>That error is good news</b>No policy means no one has been granted anything.
+  In this world, an error is often the answer you want.</div>
+</div>
+
+<div class="step" id="s10">
+  <div class="head"><span class="n">10</span><h2>Look at a different service</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">Same pattern, different service. <b>IAM</b> is who is allowed to do what.</p>
+  <div class="cmd">awslocal iam list-roles --query 'Roles[].RoleName' --output text</div>
+  <div class="look"><b>The shape never changes</b><code>awslocal</code> + service + action. Swap <code>s3</code>
+  for <code>iam</code>, <code>sqs</code>, <code>dynamodb</code> and the rest works the same way.</div>
+  <p>The <code>--query</code> flag trims the output to just the bit you want. Drop it to see the full
+  response and you will understand why people use it.</p>
+</div>
+
+<div class="step" id="s11">
+  <div class="head"><span class="n">11</span><h2>Check your work</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <p class="lead">Run this <b>before</b> you clean up.</p>
+  <div class="cmd">cd ~/Portfolio/projects/lab-01-aws-basics
+./verify.sh</div>
+  <div class="look"><b>Looking for</b>5 / 5.</div>
+</div>
+
+<div class="step" id="s12">
+  <div class="head"><span class="n">12</span><h2>Clean up after yourself</h2><input type="checkbox"></div>
+  <span class="where term">Terminal</span>
+  <div class="cmd">awslocal s3 rb s3://kn-practice --force
+rm hello.txt</div>
+  <div class="look"><b><code>rb</code> = remove bucket</b><code>--force</code> deletes what is inside first,
+  because AWS refuses to delete a bucket that is not empty.</div>
+  <div class="warn"><b>Build the habit here</b>Tearing down what you created is the difference between a
+  $3 cloud bill and a $3,000 one. It costs nothing to practise it where nothing is real.</div>
+</div>
+
+<div class="done-box">
+  <h3>Command cheat sheet</h3>
+  <div class="tbl"><table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>awslocal s3 ls</code></td><td>List all buckets</td></tr>
+    <tr><td><code>awslocal s3 ls s3://name/</code></td><td>List files inside one bucket</td></tr>
+    <tr><td><code>awslocal s3 mb s3://name</code></td><td>Make a bucket</td></tr>
+    <tr><td><code>awslocal s3 cp file s3://name/</code></td><td>Upload</td></tr>
+    <tr><td><code>awslocal s3 cp s3://name/file -</code></td><td>Print a file to screen</td></tr>
+    <tr><td><code>awslocal s3 rb s3://name --force</code></td><td>Delete a bucket and its contents</td></tr>
+    <tr><td><code>awslocal s3api get-bucket-policy --bucket name</code></td><td><b>Is it public?</b></td></tr>
+    <tr><td><code>awslocal s3api delete-bucket-policy --bucket name</code></td><td>Remove the permissions rule</td></tr>
+    <tr><td><code>awslocal iam list-roles</code></td><td>List identities</td></tr>
+  </table></div>
+  <p style="margin-top:14px">Next: <b>Lab 02 — Customer data left open to the internet.</b> A customer
+  emails support saying they found your internal records with no login. You work out when it happened,
+  who caused it, what was taken, and you close it.</p>
+</div>
+
+</div>
+
+<div class="bar"><div class="in">
+  <span id="count">0 / 12</span>
+  <div class="prog"><i id="fill"></i></div>
+  <button id="reset">Reset progress</button>
+</div></div>
+
+<script>
+(function(){
+  var KEY='lab01-progress';
+  var boxes=[].slice.call(document.querySelectorAll('.step input[type=checkbox]'));
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+  function paint(){
+    var n=0;
+    boxes.forEach(function(b){
+      b.closest('.step').classList.toggle('done',b.checked);
+      if(b.checked)n++;
+    });
+    document.getElementById('count').textContent=n+' / '+boxes.length;
+    document.getElementById('fill').style.width=(n/boxes.length*100)+'%';
+  }
+  boxes.forEach(function(b){
+    var id=b.closest('.step').id;
+    b.checked=!!saved[id];
+    b.addEventListener('change',function(){
+      saved[id]=b.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}
+      paint();
+    });
+  });
+  document.getElementById('reset').onclick=function(){
+    try{localStorage.removeItem(KEY)}catch(e){}
+    boxes.forEach(function(b){b.checked=false});paint();
+  };
+  document.querySelectorAll('.cmd').forEach(function(c){
+    var b=document.createElement('button');
+    b.textContent='Copy';
+    b.onclick=function(){
+      navigator.clipboard.writeText(c.childNodes[0].nodeValue.trim()).then(function(){
+        b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1300);
+      });
+    };
+    c.appendChild(b);
+  });
+  paint();
+})();
+</script>
+</body>
+</html>
